@@ -64,6 +64,19 @@ def index():
         return render_template('login.html', company_name=company_name, company_logo=company_logo)
     return render_template('index.html', company_name=company_name, company_logo=company_logo)
 
+# ----------------- PUBLIC SETTINGS API -----------------
+@app.route('/api/public/settings', methods=['GET'])
+def get_public_settings():
+    conn = get_db_connection()
+    company_name_row = conn.execute("SELECT value FROM settings WHERE key = 'company_name'").fetchone()
+    company_logo_row = conn.execute("SELECT value FROM settings WHERE key = 'company_logo'").fetchone()
+    conn.close()
+    
+    return jsonify({
+        'company_name': company_name_row['value'] if company_name_row else 'شمس-تك',
+        'company_logo': company_logo_row['value'] if company_logo_row else ''
+    })
+
 # ----------------- AUTHENTICATION API -----------------
 @app.route('/api/login', methods=['POST'])
 def api_login():

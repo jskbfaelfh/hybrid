@@ -4,6 +4,43 @@
    ==========================================================================
 */
 
+// Check if running inside APK/WebView (offline mode)
+const isApp = window.location.protocol === 'file:' || 
+              window.location.protocol === 'capacitor:' || 
+              window.location.protocol === 'chrome-extension:' ||
+              window.location.hostname === '';
+
+// Intercept all fetch requests to prefix remote server if running inside APK
+if (isApp) {
+    const originalFetch = window.fetch;
+    window.fetch = function(input, init) {
+        let url = typeof input === 'string' ? input : input.url;
+        
+        if (url.startsWith('/')) {
+            const savedServer = localStorage.getItem('backend_url');
+            if (savedServer) {
+                url = savedServer + url;
+            }
+        }
+        
+        if (typeof input === 'string') {
+            input = url;
+        } else {
+            input.url = url;
+        }
+        return originalFetch(input, init);
+    };
+}
+
+// Asset path helper to load images from the remote server when in APK mode
+function getAssetPath(path) {
+    if (isApp && path && path.startsWith('/')) {
+        const savedServer = localStorage.getItem('backend_url') || '';
+        return savedServer + path;
+    }
+    return path;
+}
+
 // Global variables and state
 let activeTab = 'dashboard';
 let currentCustomerId = null;
@@ -17,7 +54,27 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Initialize the application
-function initApp() {
+async function initApp() {
+    // Check authentication first if running in the app
+    if (isApp) {
+        try {
+            const authRes = await fetch('/api/check_auth');
+            if (authRes.ok) {
+                const authData = await authRes.json();
+                if (!authData.authenticated) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+            } else {
+                window.location.href = 'login.html';
+                return;
+            }
+        } catch (e) {
+            window.location.href = 'login.html';
+            return;
+        }
+    }
+
     setupNavigation();
     setupProfileTabs();
     setupSettingsTabs();
@@ -1005,7 +1062,7 @@ async function deleteVaultFile(docId) {
 function getPrintHeaderLogoHtml(companyInfo) {
     if (companyInfo && companyInfo.logo) {
         return `<div class="print-header-logo" style="display: flex; align-items: center; gap: 10px;">
-            <img src="/static/uploads/${companyInfo.logo}" style="height: 48px; object-fit: contain; border-radius: 4px;">
+            <img src="${getAssetPath('/static/uploads/' + companyInfo.logo)}" style="height: 48px; object-fit: contain; border-radius: 4px;">
             <span>${companyInfo.name}</span>
         </div>`;
     } else {
@@ -1033,7 +1090,7 @@ function applyCompanyLogo(logoPath) {
     const previewImg = document.getElementById('logo-preview-img');
     
     if (logoPath) {
-        const fullPath = `/static/uploads/${logoPath}`;
+        const fullPath = getAssetPath(`/static/uploads/${logoPath}`);
         
         if (sidebarPlaceholder) sidebarPlaceholder.style.display = 'none';
         if (sidebarImg) {
@@ -1091,7 +1148,7 @@ function compilePrintHeaderAndFooter(headerTemplate, footerTemplate, companyInfo
     
     if (companyInfo && companyInfo[headerKey]) {
         headerHtml = `<div class="print-header-image-container" style="width: 100%; margin-bottom: 25px; text-align: center;">
-            <img src="/static/uploads/${companyInfo[headerKey]}" style="width: 100%; max-height: 120mm; object-fit: contain; display: block;">
+            <img src="${getAssetPath('/static/uploads/' + companyInfo[headerKey])}" style="width: 100%; max-height: 120mm; object-fit: contain; display: block;">
         </div>`;
     } else {
         // Fallback default text header if no image is uploaded
@@ -1100,7 +1157,7 @@ function compilePrintHeaderAndFooter(headerTemplate, footerTemplate, companyInfo
         const companyAddress = (companyInfo && companyInfo.address) ? companyInfo.address : '';
         let logoTag = `☀️`;
         if (companyInfo && companyInfo.logo) {
-            logoTag = `<img src="/static/uploads/${companyInfo.logo}" style="max-height: 70px; object-fit: contain; display: block;">`;
+            logoTag = `<img src="${getAssetPath('/static/uploads/' + companyInfo.logo)}" style="max-height: 70px; object-fit: contain; display: block;">`;
         }
         
         headerHtml = `<div class="print-custom-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0B2545; padding-bottom: 15px; margin-bottom: 20px; direction: rtl; font-family: 'Cairo', sans-serif;">
@@ -1123,7 +1180,7 @@ function compilePrintHeaderAndFooter(headerTemplate, footerTemplate, companyInfo
     
     if (companyInfo && companyInfo[footerKey]) {
         footerHtml = `<div class="print-footer-image-container" style="width: 100%; margin-top: 35px; text-align: center;">
-            <img src="/static/uploads/${companyInfo[footerKey]}" style="width: 100%; max-height: 50mm; object-fit: contain; display: block;">
+            <img src="${getAssetPath('/static/uploads/' + companyInfo[footerKey])}" style="width: 100%; max-height: 50mm; object-fit: contain; display: block;">
         </div>`;
     } else {
         // Fallback default text footer if no image is uploaded
@@ -1738,7 +1795,7 @@ function applyPrintImagePreview(type, filename) {
     
     if (filename) {
         placeholder.style.display = 'none';
-        img.src = `/static/uploads/${filename}`;
+        img.src = getAssetPath(`/static/uploads/${filename}`);
         img.style.display = 'block';
     } else {
         placeholder.style.display = 'block';
@@ -1821,7 +1878,11 @@ function setupLogout() {
         try {
             const res = await fetch('/api/logout', { method: 'POST' });
             if (res.ok) {
-                window.location.reload();
+                if (isApp) {
+                    window.location.href = 'login.html';
+                } else {
+                    window.location.reload();
+                }
             }
         } catch (e) {}
     });
