@@ -3,11 +3,18 @@ import sqlite3
 import datetime
 from flask import Flask, request, jsonify, render_template, send_from_directory, session, redirect, url_for
 from werkzeug.utils import secure_filename
-from database import init_db, get_db_connection
-from cloudflare_r2_backup import (
-    upload_backup_to_r2,
-    BackupScheduler
-)
+try:
+    from backend.database import init_db, get_db_connection
+    from backend.cloudflare_r2_backup import (
+        upload_backup_to_r2,
+        BackupScheduler
+    )
+except ImportError:
+    from database import init_db, get_db_connection
+    from cloudflare_r2_backup import (
+        upload_backup_to_r2,
+        BackupScheduler
+    )
 
 
 # Configure Flask to load templates and static files from the frontend directory
