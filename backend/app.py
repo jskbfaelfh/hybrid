@@ -54,6 +54,8 @@ def query_db(query, args=(), one=False):
 
 # Authentication Decorator / Helper
 def is_authenticated():
+    if request.headers.get('X-App-Token') == 'hybrid_mobile_secret_2026':
+        return True
     return session.get('logged_in', False)
 
 # ----------------- UI ROUTE -----------------
@@ -139,6 +141,29 @@ def get_next_id():
     if not is_authenticated():
         return jsonify({'error': 'Unauthorized'}), 401
     return jsonify({'next_id': get_next_customer_id()})
+
+# ----------------- SYNC (OFFLINE APP) ENDPOINTS -----------------
+@app.route('/api/sync/export', methods=['GET'])
+def sync_export():
+    if not is_authenticated():
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Export all necessary tables for offline mobile usage
+    data = {
+        'customers': [dict(row) for row in cursor.execute("SELECT * FROM customers").fetchall()],
+        'financial_status': [dict(row) for row in cursor.execute("SELECT * FROM financial_status").fetchall()],
+        'installments': [dict(row) for row in cursor.execute("SELECT * FROM installments").fetchall()],
+        'customer_components': [dict(row) for row in cursor.execute("SELECT * FROM customer_components").fetchall()],
+        'inventory_items': [dict(row) for row in cursor.execute("SELECT * FROM inventory_items").fetchall()],
+        'company_settings': [dict(row) for row in cursor.execute("SELECT * FROM company_settings").fetchall()],
+        'company_expenses': [dict(row) for row in cursor.execute("SELECT * FROM company_expenses").fetchall()],
+        'settings_lists': [dict(row) for row in cursor.execute("SELECT * FROM settings_lists").fetchall()]
+    }
+    conn.close()
+    return jsonify(data)
 
 # ----------------- CUSTOMER API -----------------
 @app.route('/api/customers', methods=['GET'])
