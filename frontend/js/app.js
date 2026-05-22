@@ -749,7 +749,7 @@ async function loadProfileData() {
         currentCustomerData = cust;
         
         // 1. Title
-        document.getElementById('profile-title').innerHTML = `👤 ملف العميل المحترم: <span style="color: var(--neon-blue);">${cust.name}</span> (${cust.id})`;
+        document.getElementById('profile-title').innerHTML = `👤 <span style="color: var(--neon-blue);">${cust.name}</span> (${cust.id})`;
         
         // 2. Info Tab Inputs
         document.getElementById('prof-id').value = cust.id;
