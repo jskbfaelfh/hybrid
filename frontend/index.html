@@ -59,7 +59,7 @@
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <button class="mobile-nav-toggle" onclick="toggleSidebar()">☰</button>
                     <div class="top-bar-title">
-                        <h1 id="viewTitle">الإحصائيات</h1>
+                        <h1 id="viewTitle">الاحصائية</h1>
                         <p id="viewSubtitle">مرحباً {{ engineer_name }}</p>
                     </div>
                 </div>
@@ -98,17 +98,17 @@
                         <span class="trend" style="color: var(--neon-orange);">المستحقات</span>
                     </div>
                     <div class="glass-card metric-card red">
-                        <span class="label">المصاريف الكلية للشركة</span>
+                        <span class="label">المصاريف الكلية</span>
                         <span class="value" id="stat-expenses">0 د.ع</span>
                         <span class="trend" style="color: #f87171;">أجور، شحن ومواد المخزن</span>
                     </div>
                     <div class="glass-card metric-card" style="border-color: var(--success);">
-                        <span class="label">صافي الأرباح الفعلية (النقدية)</span>
+                        <span class="label">صافي الأرباح الفعلية</span>
                         <span class="value" id="stat-profit" style="color: #fff;">0 د.ع</span>
                         <span class="trend" id="stat-profit-desc" style="color: var(--success);">المقبوضات مطروح منها المصاريف</span>
                     </div>
                     <div class="glass-card metric-card" style="border-color: var(--neon-blue);">
-                        <span class="label">صافي الأرباح الدفترية (المشاريع)</span>
+                        <span class="label">صافي الأرباح الدفترية</span>
                         <span class="value" id="stat-profit-accounting" style="color: #fff;">0 د.ع</span>
                         <span class="trend" id="stat-profit-accounting-desc" style="color: var(--neon-blue);">المبيعات مطروح منها تكلفة المواد والمصاريف</span>
                     </div>
@@ -120,7 +120,7 @@
                 <div class="dashboard-layout-grid" style="grid-template-columns: 1fr 1fr;">
                     <!-- Overdue Installment Alerts list -->
                     <div class="glass-card" style="border-color: var(--danger-glow); height: fit-content;">
-                        <h2 style="font-size: 1.1rem; color: #f87171; margin-bottom: 10px;">⚠️ أقساط متأخرة مستحقة السداد</h2>
+                        <h2 style="font-size: 1.1rem; color: #f87171; margin-bottom: 10px;">الاقساط المتأخرة</h2>
                         <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">العملاء الذين تجاوزوا تاريخ الدفع ومطالبين بالسداد فوراً.</p>
                         <div style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;" id="dashboard-overdue-list">
                             <!-- Injected dynamically -->
@@ -130,7 +130,7 @@
 
                     <!-- Upcoming Installment Alerts list -->
                     <div class="glass-card" style="border-color: var(--warning-glow); height: fit-content;">
-                        <h2 style="font-size: 1.1rem; color: #fbbf24; margin-bottom: 10px;">📅 أقساط قادمة مستحقة هذا الشهر</h2>
+                        <h2 style="font-size: 1.1rem; color: #fbbf24; margin-bottom: 10px;">اقساط الشهر</h2>
                         <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">العملاء المطالبين بالسداد خلال هذا الشهر الجاري.</p>
                         <div style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;" id="dashboard-upcoming-list">
                             <!-- Injected dynamically -->
@@ -180,7 +180,7 @@
             <!-- ============================================== -->
             <section class="tab-pane" id="pane-alerts">
                 <div class="glass-card" style="max-width: 800px; margin: 0 auto;">
-                    <h2 style="font-size: 1.2rem; margin-bottom: 15px; color: var(--neon-blue);">💬 مركز التنبيهات وإرسال رسائل الواتساب المجمعة</h2>
+                    <h2 style="font-size: 1.2rem; margin-bottom: 15px; color: var(--neon-blue);">💬 التنبيهات</h2>
                     <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 25px;">
                         اكتب نص الرسالة التي تود مشاركتها مع عملائك بالكامل، وحدد من تريد إرسال التنبيه إليه أو استثنِ البعض عبر قائمة الاختيار بالأسفل.
                     </p>
@@ -219,7 +219,7 @@
             <section class="tab-pane" id="pane-inventory">
                 <div class="glass-card">
                     <div class="search-bar-row">
-                        <h2 style="font-size: 1.2rem;">📦 مواد ومستلزمات أنظمة الطاقة المتوفرة في المخزن</h2>
+                        <h2 style="font-size: 1.2rem;">📦 المواد المتوفرة</h2>
                         <div style="display: flex; gap: 10px;">
                             <button class="btn btn-secondary" onclick="openTransactionsLogModal()">📜 حركة المخزن (العمليات)</button>
                             <button class="btn btn-primary" onclick="openAddInventoryModal()">➕ إضافة مادة للمستودع</button>
@@ -282,20 +282,20 @@
             <section class="tab-pane" id="pane-settings">
                 <!-- Settings Page Internal Tabs -->
                 <div class="tab-container" style="margin-bottom: 25px;">
-                    <button class="tab-btn active" data-settings-tab="general">⚙️ إعدادات الشركة والحساب</button>
+                    <button class="tab-btn active" data-settings-tab="general">⚙️ الشركة</button>
                     <button class="tab-btn" data-settings-tab="templates">📄 قوالب العقود والضمانات</button>
-                    <button class="tab-btn" data-settings-tab="lists">🗂️ قوائم الخيارات والمخزن</button>
-                    <button class="tab-btn" data-settings-tab="backup">☁️ النسخ الاحتياطي (R2)</button>
+                    <button class="tab-btn" data-settings-tab="lists">🗂️ القوائم</button>
+                    <button class="tab-btn" data-settings-tab="backup">☁️ الاحتياطي</button>
                 </div>
 
                 <!-- 1. GENERAL SETTINGS PANE -->
                 <div class="settings-tab-pane" id="settings-tab-general">
                     <div class="glass-card">
-                        <h2 style="font-size: 1.2rem; margin-bottom: 15px; color: var(--neon-blue);">⚙️ الإعدادات للشركة وحساب الدخول</h2>
+                        <h2 style="font-size: 1.2rem; margin-bottom: 15px; color: var(--neon-blue);">⚙️ الشركة</h2>
                         
                         <div class="form-grid">
                             <div class="form-group" style="grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.02); padding: 20px; border-radius: 15px; border: 1px dashed rgba(255,255,255,0.1); margin-bottom: 20px;">
-                                <label class="form-label" style="margin-bottom: 15px;">شعار الشركة (اللوكو) الحالي</label>
+                                <label class="form-label" style="margin-bottom: 15px;">الشعار</label>
                                 <div style="width: 120px; height: 120px; border-radius: 20px; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 15px; border: 2px solid rgba(255,255,255,0.1);">
                                     <span id="sett-company-logo-placeholder" style="font-size: 1.5rem;">🏢</span>
                                     <img id="sett-company-logo-preview" src="" style="width: 100%; height: 100%; object-fit: contain; display: none;">
@@ -308,34 +308,32 @@
                                 <input type="text" id="sett-company-name" class="form-control">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">اسم المهندس المسؤول *</label>
+                                <label class="form-label">المهندس</label>
                                 <input type="text" id="sett-engineer-name" class="form-control" placeholder="اسم المهندس لعرضه في شريط الترحيب">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">رقم الهاتف للشركة</label>
+                                <label class="form-label">الهاتف</label>
                                 <input type="text" id="sett-company-phone" class="form-control">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">عنوان الشركة الرئيسي</label>
+                                <label class="form-label">العنوان</label>
                                 <input type="text" id="sett-company-address" class="form-control">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">كلمة مرور لوحة التحكم الجديدة</label>
+                                <label class="form-label">المرور</label>
                                 <input type="password" id="sett-admin-password" class="form-control" placeholder="أدخل كلمة مرور جديدة للتغيير">
                             </div>
                         </div>
                         <br>
-                        <button class="btn btn-primary" onclick="saveGeneralSettings()">💾 حفظ الإعدادات الأساسية</button>
+                        <button class="btn btn-primary" onclick="saveGeneralSettings()">💾 حفظ</button>
                     </div>
                 </div>
 
                 <!-- 2. TEMPLATES SETTINGS PANE -->
                 <div class="settings-tab-pane" id="settings-tab-templates" style="display: none;">
                     <div class="glass-card">
-                        <h2 style="font-size: 1.2rem; margin-top: 15px; margin-bottom: 15px; color: var(--neon-blue);">🖨️ تخصيص رأس وتذييل المطبوعات الرسمية A4</h2>
-                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 25px;">
-                            ارفع صور رأس وتذييل مخصصة ومستقلة لكل نوع من أنواع المعاملات لتبدو مطبوعاتك غاية في الاحترافية والخصوصية.
-                        </p>
+                        <h2 style="font-size: 1.2rem; margin-top: 15px; margin-bottom: 15px; color: var(--neon-blue);">🖨️ المطبوعات</h2>
+                        <ul style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 25px; list-style: none; padding-right: 15px;"><li>• تخصيص المعاملات</li><li>• مظهر احترافي</li></ul>
                         
                         <!-- 1. CONTRACT PRINT IMAGES -->
                         <h3 style="font-size: 1rem; color: #38bdf8; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">📜 رأس وتذييل عقد الاتفاق والتركيب</h3>
@@ -551,9 +549,9 @@
                     <!-- Inner Profile Tabs -->
                     <div class="tab-container" style="margin-bottom: 20px;">
                         <button class="tab-btn active" data-profile-tab="info">ℹ️ بيانات العميل</button>
-                        <button class="tab-btn" data-profile-tab="system">☀️ القطع المباعة والمنظومة</button>
+                        <button class="tab-btn" data-profile-tab="system">☀️ قطع المنظومة</button>
                         <button class="tab-btn" data-profile-tab="financial">💰 المبيعات والجدولة</button>
-                        <button class="tab-btn" data-profile-tab="print">🖨️ طباعة المستندات (A4)</button>
+                        <button class="tab-btn" data-profile-tab="print">🖨️ الطباعة (A4)</button>
                         <button class="tab-btn" data-profile-tab="vault">📁 المستندات والوسائط</button>
                     </div>
 
@@ -590,7 +588,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">طريقة ونوع هيكل التنصيب</label>
+                                <label class="form-label">نوع الهيكل</label>
                                 <select id="prof-installation-method" class="form-control">
                                     <option value="صبة سطح (سطحي)">صبة سطح (سطحي)</option>
                                     <option value="حديد أرضي (أرضي)">حديد أرضي (أرضي)</option>
@@ -612,7 +610,7 @@
                     <!-- 2. SYSTEM COMPONENTS TAB PANE -->
                     <!-- ============================================== -->
                     <div class="profile-tab-pane" id="profile-tab-system">
-                        <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--neon-blue);">➕ تسجيل قطعة جديدة في نظام العميل:</h3>
+                        <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--neon-blue);">➕ تجهيز القطع</h3>
                         <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
                             <div class="form-group">
                                 <label class="form-label">اسم القطعة والمادة *</label>
@@ -667,7 +665,7 @@
                         <button id="btn-cancel-comp" class="btn btn-secondary" onclick="cancelEditComponent()" style="display:none;">❌ إلغاء التعديل</button>
 
                         <br><br>
-                        <h3 style="font-size: 1rem; margin-bottom: 10px; color: var(--success);">📋 جدول القطع المنصبة بالنظام (سري وخالي من الأسعار للعميل):</h3>
+                        <h3 style="font-size: 1rem; margin-bottom: 10px; color: var(--success);">📋 جدول القطع</h3>
                         <div class="table-wrapper">
                             <table class="custom-table" style="font-size: 0.85rem;">
                                 <thead>
@@ -748,7 +746,7 @@
                     <!-- 4. PRINT A4 TAB PANE -->
                     <!-- ============================================== -->
                     <div class="profile-tab-pane" id="profile-tab-print">
-                        <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--neon-blue);">🖨️ طباعة المستندات والمعاملات الرسمية A4</h3>
+                        <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--neon-blue);">🖨️ الطباعة A4</h3>
                         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 25px;">
                             انقر على أي مستند لتوليده تلقائياً كصفحة بيضاء جاهزة للطباعة الفيزيائية أو الحفظ بصيغة PDF.
                         </p>
@@ -833,11 +831,11 @@
             <div class="modal-body">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label class="form-label">الرقم التعريفي الفريد (ثابت ومميز) *</label>
+                        <label class="form-label">الرقم التعريفي</label>
                         <input type="text" id="addCustId" class="form-control" placeholder="مثال: SH-1001" style="text-transform: uppercase;">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">اسم العميل الثلاثي الكامل *</label>
+                        <label class="form-label">الاسم *</label>
                         <input type="text" id="addCustName" class="form-control" placeholder="الاسم الكامل للعميل">
                     </div>
                     <div class="form-group">
@@ -845,22 +843,22 @@
                         <input type="text" id="addCustPhone" class="form-control" placeholder="مثال: 07700000000">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">العنوان الجغرافي / موقع المنصب</label>
+                        <label class="form-label">الموقع</label>
                         <input type="text" id="addCustAddress" class="form-control" placeholder="المحافظة، المنطقة والزقاق">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">تاريخ تركيب وتشغيل النظام</label>
+                        <label class="form-label">تاريخ التنصيب</label>
                         <input type="date" id="addCustInstallationDate" class="form-control">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">طريقة ونوع البيع</label>
+                        <label class="form-label">طريقة التسديد</label>
                         <select id="addCustSaleType" class="form-control">
                             <option value="Cash">نقد (Cash)</option>
                             <option value="Installment">أقساط (Installment)</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">طريقة ونوع هيكل التنصيب</label>
+                        <label class="form-label">نوع الهيكل</label>
                         <select id="addCustInstallationMethod" class="form-control">
                             <option value="صبة سطح (سطحي)">صبة سطح (سطحي)</option>
                             <option value="حديد أرضي (أرضي)">حديد أرضي (أرضي)</option>
@@ -869,7 +867,7 @@
                         </select>
                     </div>
                     <div class="form-group full-width">
-                        <label class="form-label">ملاحظات تشغيلية إضافية</label>
+                        <label class="form-label">الملاحظات</label>
                         <textarea id="addCustNotes" class="form-control" rows="3" placeholder="ملاحظات أخرى حول الموقع أو الاتفاق"></textarea>
                     </div>
                 </div>
