@@ -24,6 +24,7 @@ def init_db():
             installation_date TEXT,
             sale_type TEXT CHECK(sale_type IN ('Cash', 'Installment')),
             notes TEXT,
+            system_status TEXT DEFAULT 'قيد التنفيذ',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -76,7 +77,23 @@ def init_db():
             item_name TEXT NOT NULL UNIQUE,
             item_category TEXT NOT NULL,
             quantity_on_hand INTEGER DEFAULT 0,
+            min_threshold INTEGER DEFAULT 5,
+            cost_price REAL DEFAULT 0.0,
             notes TEXT
+        )
+    ''')
+    
+    # 5.5. Inventory Transactions
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS inventory_transactions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            item_id INTEGER NOT NULL,
+            transaction_type TEXT NOT NULL,
+            quantity INTEGER NOT NULL,
+            transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            related_customer TEXT,
+            notes TEXT,
+            FOREIGN KEY(item_id) REFERENCES inventory_items(id)
         )
     ''')
     
@@ -152,6 +169,7 @@ def init_db():
         'company_name': 'هايبرد إينرجي للطاقة الشمسية',
         'company_phone': '07700000000',
         'company_address': 'العراق، بغداد',
+        'engineer_name': 'أحمد علي',
         'print_header_template': '''<div class="print-custom-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0B2545; padding-bottom: 15px; margin-bottom: 20px; direction: rtl; font-family: 'Cairo', sans-serif;">
     <div style="display: flex; align-items: center; gap: 15px;">
         <div class="print-logo-container" style="display: flex; align-items: center;">
@@ -214,9 +232,26 @@ def init_db():
     for key, value in r2_credentials.items():
         cursor.execute('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', (key, value))
         
+    # 10. Dynamic Migrations (Add new columns dynamically if they do not exist)
+    migrations = [
+        ("customer_components", "cost_price", "REAL NOT NULL DEFAULT 0"),
+        ("customer_components", "component_type", "TEXT CHECK(component_type IN ('Primary', 'Secondary')) DEFAULT 'Primary'"),
+        ("customer_components", "sourcing_type", "TEXT CHECK(sourcing_type IN ('Stock', 'Direct')) DEFAULT 'Stock'"),
+        ("company_expenses", "customer_id", "TEXT REFERENCES customers (id) ON DELETE SET NULL"),
+        ("customers", "installation_method", "TEXT"),
+        ("customers", "gps_link", "TEXT")
+    ]
+    
+    for table, column, col_type in migrations:
+        try:
+            cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}")
+        except sqlite3.OperationalError:
+            # Column already exists, fail silently
+            pass
+            
     conn.commit()
     conn.close()
-    print("Database initialized successfully with Cloudflare R2 credentials.")
+    print("Database initialized successfully with Cloudflare R2 credentials and dynamic migrations.")
 
 if __name__ == '__main__':
     init_db()

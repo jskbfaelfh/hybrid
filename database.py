@@ -150,6 +150,7 @@ def init_db():
         'company_name': 'شمس-تك للطاقة الشمسية',
         'company_phone': '07700000000',
         'company_address': 'العراق، بغداد',
+        'engineer_name': 'أحمد علي',
         'contract_template': '''عقد اتفاق وتوريد نظام طاقة شمسية
 
 إنه في تاريخ {تاريخ_التنصيب}، تم الاتفاق بين شركة {اسم_الشركة} ويمثلها المدير المسؤول، وبين العميل المحترم {اسم_العميل}، حامل رقم الهاتف {هاتف_العميل}، والعنوان {عنوان_العميل}.
@@ -179,9 +180,26 @@ def init_db():
     for key, value in default_settings.items():
         cursor.execute('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', (key, value))
         
+    # 10. Dynamic Migrations (Add new columns dynamically if they do not exist)
+    migrations = [
+        ("customer_components", "cost_price", "REAL NOT NULL DEFAULT 0"),
+        ("customer_components", "component_type", "TEXT CHECK(component_type IN ('Primary', 'Secondary')) DEFAULT 'Primary'"),
+        ("customer_components", "sourcing_type", "TEXT CHECK(sourcing_type IN ('Stock', 'Direct')) DEFAULT 'Stock'"),
+        ("company_expenses", "customer_id", "TEXT REFERENCES customers (id) ON DELETE SET NULL"),
+        ("customers", "installation_method", "TEXT"),
+        ("customers", "gps_link", "TEXT")
+    ]
+    
+    for table, column, col_type in migrations:
+        try:
+            cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}")
+        except sqlite3.OperationalError:
+            # Column already exists, fail silently
+            pass
+            
     conn.commit()
     conn.close()
-    print("Database initialized successfully.")
+    print("Database initialized successfully with dynamic migrations.")
 
 if __name__ == '__main__':
     init_db()

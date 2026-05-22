@@ -8,7 +8,7 @@ app = Flask(__name__)
 app.secret_key = 'shams_tek_secret_key_129038'
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
+app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024  # 32MB max upload
 
 # Ensure upload directory exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -40,7 +40,17 @@ def is_authenticated():
 def index():
     if not is_authenticated():
         return render_template('login.html')
-    return render_template('index.html')
+    # Fetch settings
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT key, value FROM settings')
+    settings = {row['key']: row['value'] for row in cursor.fetchall()}
+    conn.close()
+    return render_template(
+        'index.html', 
+        company_name=settings.get('company_name', 'شمس-تك للطاقة الشمسية'),
+        engineer_name=settings.get('engineer_name', 'أحمد علي')
+    )
 
 # ----------------- AUTHENTICATION API -----------------
 @app.route('/api/login', methods=['POST'])
@@ -99,6 +109,8 @@ def add_customer():
     installation_date = data.get('installation_date', '')
     sale_type = data.get('sale_type', 'Cash')
     notes = data.get('notes', '')
+    installation_method = data.get('installation_method', '')
+    gps_link = data.get('gps_link', '')
     
     if not cust_id or not name or not phone:
         return jsonify({'error': 'الاسم، الهاتف والرقم التعريفي مطلوبين'}), 400
@@ -112,9 +124,9 @@ def add_customer():
     cursor = conn.cursor()
     try:
         cursor.execute('''
-            INSERT INTO customers (id, name, phone, address, installation_date, sale_type, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (cust_id, name, phone, address, installation_date, sale_type, notes))
+            INSERT INTO customers (id, name, phone, address, installation_date, sale_type, notes, installation_method, gps_link)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (cust_id, name, phone, address, installation_date, sale_type, notes, installation_method, gps_link))
         conn.commit()
     except Exception as e:
         conn.rollback()
@@ -165,6 +177,8 @@ def update_customer(id):
     installation_date = data.get('installation_date', '')
     sale_type = data.get('sale_type')
     notes = data.get('notes', '')
+    installation_method = data.get('installation_method', '')
+    gps_link = data.get('gps_link', '')
     
     if not name or not phone:
         return jsonify({'error': 'الاسم والهاتف مطلوبان'}), 400
@@ -174,9 +188,9 @@ def update_customer(id):
     try:
         cursor.execute('''
             UPDATE customers
-            SET name = ?, phone = ?, address = ?, installation_date = ?, sale_type = ?, notes = ?
+            SET name = ?, phone = ?, address = ?, installation_date = ?, sale_type = ?, notes = ?, installation_method = ?, gps_link = ?
             WHERE id = ?
-        ''', (name, phone, address, installation_date, sale_type, notes, id))
+        ''', (name, phone, address, installation_date, sale_type, notes, installation_method, gps_link, id))
         conn.commit()
     except Exception as e:
         conn.rollback()
@@ -217,9 +231,12 @@ def add_component(id):
         
     data = request.json or {}
     name = data.get('component_name')
-    qty = data.get('quantity', 1)
-    unit_price = data.get('unit_price', 0.0)
+    qty = int(data.get('quantity', 1))
+    unit_price = float(data.get('unit_price', 0.0))
     warranty = data.get('warranty_period', '')
+    cost_price = float(data.get('cost_price', 0.0))
+    component_type = data.get('component_type', 'Primary')
+    sourcing_type = data.get('sourcing_type', 'Stock')
     
     if not name:
         return jsonify({'error': 'اسم القطعة مطلوب'}), 400
@@ -229,10 +246,22 @@ def add_component(id):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
+        if sourcing_type == 'Stock':
+            # Check inventory
+            inv_item = cursor.execute('SELECT * FROM inventory_items WHERE item_name = ?', (name,)).fetchone()
+            if not inv_item:
+                return jsonify({'error': f'المادة "{name}" غير موجودة في المخزن'}), 400
+            
+            if inv_item['quantity_on_hand'] < qty:
+                return jsonify({'error': f'الكمية المطلوبة ({qty}) غير متوفرة في المخزن. المتاح حالياً: {inv_item["quantity_on_hand"]}'}), 400
+                
+            # Decrement inventory stock
+            cursor.execute('UPDATE inventory_items SET quantity_on_hand = quantity_on_hand - ? WHERE id = ?', (qty, inv_item['id']))
+            
         cursor.execute('''
-            INSERT INTO customer_components (customer_id, component_name, quantity, unit_price, total_price, warranty_period)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (id, name, qty, unit_price, total_price, warranty))
+            INSERT INTO customer_components (customer_id, component_name, quantity, unit_price, total_price, warranty_period, cost_price, component_type, sourcing_type)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (id, name, qty, unit_price, total_price, warranty, cost_price, component_type, sourcing_type))
         conn.commit()
     except Exception as e:
         conn.rollback()
@@ -250,6 +279,19 @@ def delete_component(comp_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
+        comp = cursor.execute('SELECT * FROM customer_components WHERE id = ?', (comp_id,)).fetchone()
+        if not comp:
+            return jsonify({'error': 'القطعة غير موجودة'}), 404
+            
+        comp_dict = dict(comp)
+        sourcing = comp_dict.get('sourcing_type', 'Stock')
+        name = comp_dict.get('component_name')
+        qty = comp_dict.get('quantity', 0)
+        
+        if sourcing == 'Stock':
+            # Restore stock in inventory
+            cursor.execute('UPDATE inventory_items SET quantity_on_hand = quantity_on_hand + ? WHERE item_name = ?', (qty, name))
+            
         cursor.execute('DELETE FROM customer_components WHERE id = ?', (comp_id,))
         conn.commit()
     except Exception as e:
@@ -337,14 +379,14 @@ def generate_installments(id):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        # Clear existing unpaid installments
-        cursor.execute("DELETE FROM installments WHERE customer_id = ? AND status = 'Unpaid'", (id,))
+        # Clear existing unpaid and overdue installments
+        cursor.execute("DELETE FROM installments WHERE customer_id = ? AND status IN ('Unpaid', 'Overdue')", (id,))
         
         # Check if they have already paid installments to not overwrite paid ones
         paid_count = cursor.execute("SELECT COUNT(*) as count FROM installments WHERE customer_id = ? AND status = 'Paid'", (id,)).fetchone()['count']
         
         for i in range(paid_count, count):
-            due_date = base_date + relativedelta(months=(i - paid_count))
+            due_date = base_date + relativedelta(months=i)
             cursor.execute('''
                 INSERT INTO installments (customer_id, installment_number, amount, due_date, status)
                 VALUES (?, ?, ?, ?, 'Unpaid')
@@ -421,7 +463,12 @@ def handle_expenses():
         return jsonify({'error': 'Unauthorized'}), 401
         
     if request.method == 'GET':
-        rows = query_db('SELECT * FROM company_expenses ORDER BY expense_date DESC')
+        rows = query_db('''
+            SELECT e.*, c.name as customer_name
+            FROM company_expenses e
+            LEFT JOIN customers c ON e.customer_id = c.id
+            ORDER BY e.expense_date DESC
+        ''')
         return jsonify([dict(r) for r in rows])
         
     # POST - Add new expense
@@ -431,6 +478,9 @@ def handle_expenses():
     amount = float(data.get('amount', 0))
     expense_date = data.get('expense_date')
     notes = data.get('notes', '')
+    customer_id = data.get('customer_id')
+    if not customer_id or customer_id == '':
+        customer_id = None
     
     if not item_name or not category or amount <= 0 or not expense_date:
         return jsonify({'error': 'يرجى ملء كافة الحقول الأساسية'}), 400
@@ -439,9 +489,9 @@ def handle_expenses():
     cursor = conn.cursor()
     try:
         cursor.execute('''
-            INSERT INTO company_expenses (item_name, category, amount, expense_date, notes)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (item_name, category, amount, expense_date, notes))
+            INSERT INTO company_expenses (item_name, category, amount, expense_date, notes, customer_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (item_name, category, amount, expense_date, notes, customer_id))
         conn.commit()
     except Exception as e:
         conn.rollback()
@@ -558,9 +608,14 @@ def upload_document(id):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        # Determine simple type (Image or PDF)
+        # Determine simple type (Image, PDF, or Video)
         file_ext = os.path.splitext(filename)[1].lower()
-        file_type = 'صورة' if file_ext in ['.png', '.jpg', '.jpeg', '.gif', '.webp'] else 'ملف PDF'
+        if file_ext in ['.png', '.jpg', '.jpeg', '.gif', '.webp']:
+            file_type = 'صورة'
+        elif file_ext in ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.3gp']:
+            file_type = 'فيديو'
+        else:
+            file_type = 'ملف PDF'
         
         cursor.execute('''
             INSERT INTO documents (customer_id, file_name, file_type, file_path)
@@ -725,8 +780,13 @@ def get_dashboard_stats():
     expenses = query_db('SELECT SUM(amount) as sum FROM company_expenses', one=True)
     total_expenses = expenses['sum'] if expenses['sum'] else 0.0
     
-    # 5. Net Profit (Collections - Expenses)
-    net_profit = total_collections - total_expenses
+    # 5. Total Cost of Goods Sold (Sold Parts Cost)
+    cogs = query_db('SELECT SUM(cost_price * quantity) as sum FROM customer_components', one=True)
+    total_cogs = cogs['sum'] if cogs['sum'] else 0.0
+    
+    # 6. Profits
+    net_profit = total_collections - total_expenses  # Real Cash Flow profit
+    net_profit_accounting = total_sales - total_cogs - total_expenses  # Book/Accounting profit
     
     # 6. Unpaid/Overdue installments
     unpaid_list = query_db('''
@@ -780,7 +840,9 @@ def get_dashboard_stats():
         'total_collections': total_collections,
         'total_debts': total_debts,
         'total_expenses': total_expenses,
+        'total_cogs': total_cogs,
         'net_profit': net_profit,
+        'net_profit_accounting': net_profit_accounting,
         'upcoming_installments': [dict(i) for i in unpaid_list],
         'overdue_installments': [dict(i) for i in overdue_list],
         'chart_sales': [dict(r) for r in chart_sales_rows],
