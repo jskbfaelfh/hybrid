@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import android.content.ContextWrapper
+import com.example.hybridenergy.sync.SyncManager
 
 fun Context.findActivity(): Activity? {
     var context = this
@@ -88,36 +89,80 @@ class AndroidBridge(
         }
     }
 
+    private fun cleanUrlPath(url: String): String {
+        return url.substringBefore('?')
+    }
+
+    private fun mergePendingTasks(cleanUrl: String, cachedJson: String): String {
+        try {
+            val jsonArray = org.json.JSONArray(cachedJson)
+            val pending = dbHelper.getPendingSyncTasks()
+            
+            // 1. Apply any POST additions
+            for (task in pending) {
+                val method = task["method"] as String
+                val endpoint = task["endpoint"] as String
+                val payload = task["payload"] as String
+                val taskId = task["id"] as Long
+                
+                val cleanEndpoint = cleanUrlPath(endpoint)
+                
+                if (method == "POST" && cleanEndpoint == cleanUrl) {
+                    val obj = org.json.JSONObject(payload)
+                    obj.put("is_offline_unsynced", true)
+                    if (!obj.has("id") || obj.getString("id").isEmpty()) {
+                        obj.put("id", -taskId)
+                    }
+                    jsonArray.put(obj)
+                }
+            }
+            
+            // 2. Apply any DELETE removals
+            for (task in pending) {
+                val method = task["method"] as String
+                val endpoint = task["endpoint"] as String
+                
+                val cleanEndpoint = cleanUrlPath(endpoint)
+                if (method == "DELETE" && cleanEndpoint.startsWith("$cleanUrl/")) {
+                    val idToDelete = cleanEndpoint.substringAfter("$cleanUrl/")
+                    if (idToDelete.isNotEmpty()) {
+                        val filteredArray = org.json.JSONArray()
+                        for (i in 0 until jsonArray.length()) {
+                            val obj = jsonArray.getJSONObject(i)
+                            val objId = if (obj.has("id")) obj.get("id").toString() else ""
+                            if (objId != idToDelete) {
+                                filteredArray.put(obj)
+                            }
+                        }
+                        while (jsonArray.length() > 0) {
+                            jsonArray.remove(0)
+                        }
+                        for (i in 0 until filteredArray.length()) {
+                            jsonArray.put(filteredArray.getJSONObject(i))
+                        }
+                    }
+                }
+            }
+            
+            return jsonArray.toString()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return cachedJson
+        }
+    }
+
     @JavascriptInterface
     fun saveCache(url: String, responseJson: String) {
-        dbHelper.saveCache(url, responseJson)
+        val cleanUrl = cleanUrlPath(url)
+        dbHelper.saveCache(cleanUrl, responseJson)
     }
 
     @JavascriptInterface
     fun getCacheWithOfflineData(url: String): String {
-        val cached = dbHelper.getCache(url)
+        val cleanUrl = cleanUrlPath(url)
+        val cached = dbHelper.getCache(cleanUrl)
         if (cached != null) {
-            if (url == "/api/customers") {
-                try {
-                    val jsonArray = org.json.JSONArray(cached)
-                    val pending = dbHelper.getPendingSyncTasks()
-                    for (task in pending) {
-                        if (task["endpoint"] == "/api/customers" && task["method"] == "POST") {
-                            val payload = task["payload"] as String
-                            val obj = org.json.JSONObject(payload)
-                            obj.put("is_offline_unsynced", true)
-                            if (!obj.has("id") || obj.getString("id").isEmpty()) {
-                                obj.put("id", -(task["id"] as Long))
-                            }
-                            jsonArray.put(obj)
-                        }
-                    }
-                    return jsonArray.toString()
-                } catch (e: Exception) {
-                    return cached
-                }
-            }
-            return cached
+            return mergePendingTasks(cleanUrl, cached)
         }
         return "404"
     }
@@ -125,6 +170,13 @@ class AndroidBridge(
     @JavascriptInterface
     fun enqueueSyncTask(url: String, method: String, body: String): String {
         val id = dbHelper.enqueueSyncTask(url, method.uppercase(), body)
+        if (id != -1L) {
+            try {
+                SyncManager(context).triggerOneTimeSync()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
         return if (id != -1L) "success" else "error"
     }
 }

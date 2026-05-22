@@ -9,6 +9,9 @@ window.fetch = async function(...args) {
     if (urlStr.startsWith('/api/') && window.AndroidBridge) {
         const method = (options.method || 'GET').toUpperCase();
         
+        // Normalize URL by removing query parameters before saving/loading from cache
+        const cleanUrl = urlStr.split('?')[0];
+        
         if (method === 'GET') {
             try {
                 // Try real network first (Async, Non-blocking!)
@@ -35,14 +38,14 @@ window.fetch = async function(...args) {
                 if (res.ok) {
                     const cloned = res.clone();
                     const text = await cloned.text();
-                    window.AndroidBridge.saveCache(urlStr, text); // Fast SQLite write
+                    window.AndroidBridge.saveCache(cleanUrl, text); // Fast SQLite write using clean URL
                     return res;
                 } else {
                     throw new Error("Server error");
                 }
             } catch (e) {
                 // Network failed or offline! Fallback to local cache synchronously.
-                console.log('Network failed, falling back to cache for:', urlStr);
+                console.log('Network failed, falling back to cache for:', cleanUrl);
                 const cachedStr = window.AndroidBridge.getCacheWithOfflineData(urlStr);
                 if (cachedStr && cachedStr !== '404') {
                     return new Response(cachedStr, { status: 200, headers: {'Content-Type': 'application/json'} });
@@ -52,13 +55,42 @@ window.fetch = async function(...args) {
             }
         } else {
             // POST, PUT, DELETE
-            // To ensure smooth UI, we just queue it in SQLite and return success immediately.
-            const bodyStr = typeof options.body === 'string' ? options.body : JSON.stringify(options.body || {});
-            const enqueueRes = window.AndroidBridge.enqueueSyncTask(urlStr, method, bodyStr);
-            if (enqueueRes === 'success') {
-                return new Response(JSON.stringify({success: true, message: "تم حفظ العملية محلياً وسيتم إرسالها للسيرفر عند توفر الإنترنت"}), { status: 200, headers: {'Content-Type': 'application/json'} });
-            } else {
-                return new Response(JSON.stringify({success: false}), { status: 500 });
+            try {
+                // Try real network first (Async, Non-blocking!)
+                let fullUrl = urlStr;
+                const serverUrl = window.SERVER_URL || (window.AndroidBridge && window.AndroidBridge.getServerUrl ? window.AndroidBridge.getServerUrl() : "");
+                if (serverUrl) {
+                    const cleanServer = serverUrl.endsWith('/') ? serverUrl.slice(0, -1) : serverUrl;
+                    const cleanPath = urlStr.startsWith('/') ? urlStr : '/' + urlStr;
+                    fullUrl = cleanServer + cleanPath;
+                }
+                
+                const newOptions = { ...options };
+                newOptions.headers = { ...newOptions.headers, 'X-App-Token': 'hybrid_mobile_secret_2026' };
+                
+                // 5 seconds timeout for mutations
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                newOptions.signal = controller.signal;
+                
+                const res = await originalFetch(fullUrl, newOptions);
+                clearTimeout(timeoutId);
+                
+                if (res.ok) {
+                    return res;
+                } else {
+                    throw new Error("Mutation failed on server");
+                }
+            } catch (e) {
+                // Network failed or offline! Fallback to enqueuing locally in SQLite.
+                console.log('Mutation failed or offline, enqueuing local task:', urlStr);
+                const bodyStr = typeof options.body === 'string' ? options.body : JSON.stringify(options.body || {});
+                const enqueueRes = window.AndroidBridge.enqueueSyncTask(urlStr, method, bodyStr);
+                if (enqueueRes === 'success') {
+                    return new Response(JSON.stringify({success: true, message: "تم حفظ العملية محلياً وسيتم إرسالها للسيرفر عند توفر الإنترنت"}), { status: 200, headers: {'Content-Type': 'application/json'} });
+                } else {
+                    return new Response(JSON.stringify({success: false}), { status: 500 });
+                }
             }
         }
     }

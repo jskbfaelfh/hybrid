@@ -48,6 +48,21 @@ class SyncManager(private val context: Context) {
         }
     }
 
+    fun triggerOneTimeSync() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val prefs = context.getSharedPreferences("HybridEnergyPrefs", Context.MODE_PRIVATE)
+                val serverUrl = prefs.getString("server_url", "") ?: ""
+                if (serverUrl.isNotEmpty() && isServerReachable(serverUrl)) {
+                    pushPendingTasks(serverUrl)
+                    pullAndCacheData(serverUrl)
+                }
+            } catch (e: Exception) {
+                Log.e("SyncManager", "One-time sync error: ${e.message}")
+            }
+        }
+    }
+
     fun stopAutoSync() {
         syncJob?.cancel()
     }
