@@ -221,8 +221,8 @@
                     <div class="search-bar-row">
                         <h2 style="font-size: 1.2rem;">📦 المواد المتوفرة</h2>
                         <div style="display: flex; gap: 10px;">
-                            <button class="btn btn-secondary" onclick="openTransactionsLogModal()">📜 حركة المخزن (العمليات)</button>
-                            <button class="btn btn-primary" onclick="openAddInventoryModal()">➕ إضافة مادة للمستودع</button>
+                            <button class="btn btn-secondary" onclick="openTransactionsLogModal()">حركة المخزن</button>
+                            <button class="btn btn-primary" onclick="openAddInventoryModal()">إضافة مادة</button>
                         </div>
                     </div>
 
@@ -230,11 +230,11 @@
                         <table class="custom-table">
                             <thead>
                                 <tr>
-                                    <th>المادة والقطع</th>
-                                    <th>الفئة والتصنيف</th>
-                                    <th>الكمية المتوفرة</th>
-                                    <th>تكلفة المفرد</th>
-                                    <th>ملاحظات وتفاصيل</th>
+                                    <th>المادة</th>
+                                    <th>الفئة</th>
+                                    <th>الكمية</th>
+                                    <th>التكلفة</th>
+                                    <th>الملاحظات</th>
                                     <th>إجراءات</th>
                                 </tr>
                             </thead>
@@ -252,17 +252,17 @@
             <section class="tab-pane" id="pane-expenses">
                 <div class="glass-card">
                     <div class="search-bar-row">
-                        <h2 style="font-size: 1.2rem;">💸 سجل المصاريف والأجور للشركة</h2>
-                        <button class="btn btn-primary" onclick="openAddExpenseModal()">➕ إضافة مصروف مالي جديد</button>
+                        <h2 style="font-size: 1.2rem;">سجل المصاريف</h2>
+                        <button class="btn btn-primary" onclick="openAddExpenseModal()">إضافة مصروف</button>
                     </div>
 
                     <div class="table-wrapper">
                         <table class="custom-table">
                             <thead>
                                 <tr>
-                                    <th>البند والمستفيد</th>
-                                    <th>فئة المصروف</th>
-                                    <th>المبلغ المدفوع</th>
+                                    <th>المستفيد</th>
+                                    <th>الفئة</th>
+                                    <th>المبلغ</th>
                                     <th>التاريخ</th>
                                     <th>ملاحظات</th>
                                     <th>إجراءات</th>
@@ -597,7 +597,7 @@
                                 </select>
                             </div>
                             <div class="form-group full-width">
-                                <label class="form-label">ملاحظات إضافية حول العميل</label>
+                                <label class="form-label">الملاحظات حول العميل</label>
                                 <textarea id="prof-notes" class="form-control" rows="3"></textarea>
                             </div>
                         </div>
@@ -613,7 +613,7 @@
                         <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--neon-blue);">➕ تجهيز القطع</h3>
                         <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
                             <div class="form-group">
-                                <label class="form-label">اسم القطعة والمادة *</label>
+                                <label class="form-label">المادة</label>
                                 <div id="comp-name-container">
                                     <select id="comp-name" class="form-control">
                                         <option value="">-- يرجى الانتظار --</option>
@@ -885,19 +885,19 @@
     <div class="modal-overlay" id="modalAddInventory">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
-                <h3 class="modal-title">➕ إضافة قطعة/مادة للمستودع</h3>
+                <h3 class="modal-title">إضافة مادة</h3>
                 <button class="modal-close" onclick="closeModal('modalAddInventory')">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-grid" style="grid-template-columns: 1fr;">
                     <div class="form-group">
-                        <label class="form-label">اسم القطعة والمادة *</label>
+                        <label class="form-label">المادة</label>
                         <div id="add-inv-name-container">
                             <input type="text" id="addInvName" class="form-control" placeholder="اسم المادة وموديلها بالتحديد">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">الفئة والتصنيف</label>
+                        <label class="form-label">الفئة</label>
                         <select id="addInvCategory" class="form-control" onchange="onAddInventoryCategoryChange()">
                             <option value="Panel">ألواح طاقة شمسية</option>
                             <option value="Inverter">إنفرتر وعواكس</option>
@@ -908,25 +908,25 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">الكمية المدخلة للمستودع *</label>
+                        <label class="form-label">الكمية</label>
                         <input type="number" id="addInvQty" class="form-control" value="0" min="0">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">تكلفة المفرد (للتتبع المالي) *</label>
+                        <label class="form-label">التكلفة (للتتبع المالي) *</label>
                         <input type="number" id="addInvCostPrice" class="form-control" value="0" min="0" step="any">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">تنبيه الحد الأدنى (لنواقص المخزن) *</label>
+                        <label class="form-label">الحد الأدنى</label>
                         <input type="number" id="addInvThreshold" class="form-control" value="5" min="0">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">ملاحظات ومواصفات فنية</label>
+                        <label class="form-label">الملاحظات</label>
                         <input type="text" id="addInvNotes" class="form-control" placeholder="ملاحظات حول المورد أو السعة">
                     </div>
                 </div>
                 <br>
                 <div style="text-align: left;">
-                    <button class="btn btn-primary" onclick="submitAddInventory()">💾 إضافة للمخزن</button>
+                    <button class="btn btn-primary" onclick="submitAddInventory()">إضافة</button>
                     <button class="btn btn-secondary" onclick="closeModal('modalAddInventory')">إلغاء</button>
                 </div>
             </div>
@@ -939,37 +939,37 @@
     <div class="modal-overlay" id="modalAddExpense">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
-                <h3 class="modal-title">➕ إضافة مصروف تشغيلي جديد</h3>
+                <h3 class="modal-title">إضافة مصروف</h3>
                 <button class="modal-close" onclick="closeModal('modalAddExpense')">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-grid" style="grid-template-columns: 1fr;">
                     <div class="form-group">
-                        <label class="form-label">بند الصرف والمستفيد *</label>
+                        <label class="form-label">المستفيد</label>
                         <input type="text" id="addExpName" class="form-control" placeholder="مثال: شراء كابلات من التاجر محمد">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">فئة وتصنيف المصروف</label>
+                        <label class="form-label">الفئة</label>
                         <select id="addExpCategory" class="form-control">
                             <!-- Injected dynamically based on settings -->
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">المبلغ الإجمالي المدفوع *</label>
+                        <label class="form-label">المبلغ</label>
                         <input type="text" id="addExpAmount" class="form-control" placeholder="المبلغ دينار / دولار" oninput="formatNumberInput(this)">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">تاريخ الدفع والصرف *</label>
+                        <label class="form-label">التاريخ</label>
                         <input type="date" id="addExpDate" class="form-control">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">ملاحظات إضافية</label>
+                        <label class="form-label">الملاحظات</label>
                         <input type="text" id="addExpNotes" class="form-control" placeholder="تفاصيل صرف أخرى">
                     </div>
                 </div>
                 <br>
                 <div style="text-align: left;">
-                    <button class="btn btn-primary" onclick="submitAddExpense()">💾 تسجيل الصرف</button>
+                    <button class="btn btn-primary" onclick="submitAddExpense()">تسجيل</button>
                     <button class="btn btn-secondary" onclick="closeModal('modalAddExpense')">إلغاء</button>
                 </div>
             </div>
@@ -1129,7 +1129,7 @@
                             <tr>
                                 <th>بند الصرف / المادة</th>
                                 <th>الكمية</th>
-                                <th>تكلفة المفرد</th>
+                                <th>التكلفة</th>
                                 <th>الإجمالي</th>
                             </tr>
                         </thead>
