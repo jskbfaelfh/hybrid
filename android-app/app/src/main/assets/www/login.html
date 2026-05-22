@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول للنظام</title>
+    <!-- Google Fonts Outfit & Tajawal -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Tajawal:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 40px 30px;
+            text-align: center;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            position: relative;
+        }
+        
+        .login-logo {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 0 12px var(--neon-blue-glow));
+        }
+        
+        .login-card h2 {
+            font-size: 1.6rem;
+            font-weight: 900;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #fff, #999);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .login-card p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+        
+        .error-message {
+            color: #f87171;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            min-height: 20px;
+            font-weight: bold;
+        }
+
+        .server-config-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+        }
+
+        .server-config-btn:hover {
+            background: rgba(0, 242, 254, 0.1);
+            color: var(--neon-blue);
+            border-color: var(--border-glow);
+        }
+
+        /* Server Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(3, 7, 18, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            text-align: right;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+ 
+    <!-- Server Config Icon (Visible in App) -->
+    <button class="server-config-btn" id="serverConfigBtn" onclick="openServerModal()">⚙️</button>
+
+    <div class="glass-card login-card">
+        <div class="login-logo" id="logoContainer">
+            <span id="defaultLogo">☀️</span>
+            <img id="logoImg" style="max-height: 70px; object-fit: contain; margin-bottom: 10px; border-radius: 8px; display: none;">
+        </div>
+        <h2 id="companyNameText">شمس-تك</h2>
+        <p>نظام إدارة المبيعات الميدانية، الأقساط والمخزن</p>
+        
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group" style="text-align: right; margin-bottom: 20px;">
+                <label class="form-label">كلمة مرور لوحة التحكم *</label>
+                <input type="password" id="adminPassword" class="form-control" placeholder="أدخل كلمة مرور النظام" required style="width: 100%; text-align: center; letter-spacing: 2px;">
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px;">🔓 تسجيل الدخول للنظام</button>
+            <div id="errorBox" class="error-message"></div>
+        </form>
+    </div>
+
+    <!-- Server Config Modal -->
+    <div class="modal" id="serverModal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 15px; font-weight: 800;">⚙️ إعدادات رابط السيرفر</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">يرجى إدخال رابط السيرفر المستضاف (مثال: https://your-app.up.railway.app)</p>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <input type="text" id="serverUrlInput" class="form-control" style="width: 100%; direction: ltr;" placeholder="https://...">
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="closeServerModal()">إلغاء</button>
+                <button class="btn btn-primary" onclick="saveServerUrl()">حفظ</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if running inside APK/WebView
+        const isApp = window.location.protocol === 'file:' || 
+                      window.location.protocol === 'capacitor:' || 
+                      window.location.protocol === 'chrome-extension:' ||
+                      window.location.hostname === '';
+
+        // Show config button on app
+        if (isApp) {
+            document.getElementById('serverConfigBtn').style.display = 'flex';
+        }
+
+        // Intercept all fetch requests to prefix remote server if running inside APK
+        const originalFetch = window.fetch;
+        window.fetch = function(input, init) {
+            let url = typeof input === 'string' ? input : input.url;
+            
+            if (url.startsWith('/')) {
+                const savedServer = localStorage.getItem('backend_url');
+                if (isApp && savedServer) {
+                    url = savedServer + url;
+                } else if (isApp) {
+                    alert('يرجى ضبط رابط السيرفر أولاً بالضغط على زر الترس ⚙️ في الأعلى');
+                }
+            }
+            
+            if (typeof input === 'string') {
+                input = url;
+            } else {
+                input.url = url;
+            }
+            return originalFetch(input, init);
+        };
+
+        // Modal actions
+        function openServerModal() {
+            document.getElementById('serverUrlInput').value = localStorage.getItem('backend_url') || '';
+            document.getElementById('serverModal').style.display = 'flex';
+        }
+
+        function closeServerModal() {
+            document.getElementById('serverModal').style.display = 'none';
+        }
+
+        function saveServerUrl() {
+            let url = document.getElementById('serverUrlInput').value.trim();
+            if (url.endsWith('/')) {
+                url = url.slice(0, -1);
+            }
+            if (url) {
+                localStorage.setItem('backend_url', url);
+                closeServerModal();
+                loadPublicSettings();
+            } else {
+                alert('الرجاء إدخال رابط صحيح');
+            }
+        }
+
+        // Load public settings (company name and logo)
+        async function loadPublicSettings() {
+            try {
+                const res = await fetch('/api/public/settings');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.company_name) {
+                        document.getElementById('companyNameText').innerText = data.company_name;
+                        document.title = data.company_name + ' | تسجيل الدخول';
+                    }
+                    if (data.company_logo) {
+                        const img = document.getElementById('logoImg');
+                        const defaultLogo = document.getElementById('defaultLogo');
+                        const serverUrl = localStorage.getItem('backend_url') || '';
+                        
+                        img.src = (isApp ? serverUrl : '') + '/static/uploads/' + data.company_logo;
+                        img.style.display = 'inline-block';
+                        defaultLogo.style.display = 'none';
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load settings:", err);
+            }
+        }
+
+        // Run on load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadPublicSettings();
+        });
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const password = document.getElementById('adminPassword').value;
+            const errorBox = document.getElementById('errorBox');
+            errorBox.innerText = '';
+            
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    if (isApp) {
+                        // In app, navigate to index.html page
+                        window.location.href = 'index.html';
+                    } else {
+                        window.location.reload();
+                    }
+                } else {
+                    errorBox.innerText = data.message || 'فشل تسجيل الدخول';
+                }
+            } catch (err) {
+                errorBox.innerText = 'فشل الاتصال بالخادم؛ تحقق من رابط السيرفر أو اتصال الإنترنت';
+            }
+        }
+    </script>
+</body>
+</html>

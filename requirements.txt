@@ -3,3 +3,10 @@ python-dateutil==2.9.0.post0
 boto3>=1.26.0
 gunicorn
 werkzeug
+python-dotenv
+flask-limiter
+apscheduler
+filetype
+google-auth
+google-auth-oauthlib
+google-api-python-client
