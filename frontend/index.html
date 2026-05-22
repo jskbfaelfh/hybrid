@@ -31,20 +31,20 @@
                     <a href="javascript:void(0)">🛠️ المنظومات</a>
                 </li>
                 <li class="menu-item" data-tab="alerts">
-                    <a href="javascript:void(0)">💬 التنبيهات العامة</a>
+                    <a href="javascript:void(0)">💬 التنبيهات</a>
                 </li>
                 <li class="menu-item" data-tab="inventory">
-                    <a href="javascript:void(0)">📦 المخزن البسيط</a>
+                    <a href="javascript:void(0)">📦 المخزن</a>
                 </li>
                 <li class="menu-item" data-tab="expenses">
-                    <a href="javascript:void(0)">💸 المصاريف التشغيلية</a>
+                    <a href="javascript:void(0)">💸 المصاريف</a>
                 </li>
                 <li class="menu-item" data-tab="settings">
-                    <a href="javascript:void(0)">⚙️ الإعدادات العامة</a>
+                    <a href="javascript:void(0)">⚙️ الإعدادات</a>
                 </li>
             </ul>
             <div class="sidebar-footer">
-                <button class="logout-btn" id="logoutBtn">🏃 تسجيل خروج</button>
+                <button class="logout-btn" id="logoutBtn">🏃 خروج</button>
             </div>
         </aside>
 
@@ -59,8 +59,8 @@
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <button class="mobile-nav-toggle" onclick="toggleSidebar()">☰</button>
                     <div class="top-bar-title">
-                        <h1 id="viewTitle">لوحة التحكم الإحصائية</h1>
-                        <p id="viewSubtitle">أهلاً بك مهندس {{ engineer_name }}. إليك نظرة شاملة على أعمال {{ company_name }} اليوم.</p>
+                        <h1 id="viewTitle">الإحصائيات</h1>
+                        <p id="viewSubtitle">مرحباً {{ engineer_name }}</p>
                     </div>
                 </div>
                 <div class="system-status" style="gap: 15px;">
@@ -71,7 +71,7 @@
                     <div style="width: 1px; height: 15px; background: rgba(255,255,255,0.15);"></div>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <div class="status-dot"></div>
-                        <span>النظام متصل سحابياً</span>
+                        <span>متصل</span>
                     </div>
                 </div>
             </header>
@@ -83,19 +83,19 @@
                 <!-- Metrics Grid -->
                 <div class="metrics-grid">
                     <div class="glass-card metric-card blue">
-                        <span class="label">إجمالي المبيعات والتعاقدات</span>
+                        <span class="label">المبيعات</span>
                         <span class="value" id="stat-sales">0 د.ع</span>
-                        <span class="trend" style="color: var(--neon-blue);">قيمة كافة العقود المنصبة</span>
+                        <span class="trend" style="color: var(--neon-blue);">العقود</span>
                     </div>
                     <div class="glass-card metric-card green">
-                        <span class="label">المبالغ المالية المحصلة</span>
+                        <span class="label">المحصلات</span>
                         <span class="value" id="stat-collections">0 د.ع</span>
-                        <span class="trend" style="color: var(--success);">المقدمات + الأقساط المقبوضة</span>
+                        <span class="trend" style="color: var(--success);">المقبوضات</span>
                     </div>
                     <div class="glass-card metric-card orange">
-                        <span class="label">الديون المتبقية للعملاء</span>
+                        <span class="label">الديون</span>
                         <span class="value" id="stat-debts">0 د.ع</span>
-                        <span class="trend" style="color: var(--neon-orange);">مستحقات الأقساط غير المدفوعة</span>
+                        <span class="trend" style="color: var(--neon-orange);">المستحقات</span>
                     </div>
                     <div class="glass-card metric-card red">
                         <span class="label">المصاريف الكلية للشركة</span>
@@ -149,7 +149,7 @@
                         <div class="search-input-wrapper">
                             <input type="text" id="customerSearch" class="form-control" placeholder="🔍 ابحث باسم العميل أو رقم الهاتف...">
                         </div>
-                        <button class="btn btn-primary" onclick="openAddCustomerModal()">➕ إضافة عميل جديد</button>
+                        <button class="btn btn-primary" onclick="openAddCustomerModal()">➕ عميل جديد</button>
                     </div>
 
                     <div class="customers-grid" id="customers-grid">
@@ -252,7 +252,7 @@
             <section class="tab-pane" id="pane-expenses">
                 <div class="glass-card">
                     <div class="search-bar-row">
-                        <h2 style="font-size: 1.2rem;">💸 سجل المصاريف التشغيلية والأجور للشركة</h2>
+                        <h2 style="font-size: 1.2rem;">💸 سجل المصاريف والأجور للشركة</h2>
                         <button class="btn btn-primary" onclick="openAddExpenseModal()">➕ إضافة مصروف مالي جديد</button>
                     </div>
 
@@ -291,7 +291,7 @@
                 <!-- 1. GENERAL SETTINGS PANE -->
                 <div class="settings-tab-pane" id="settings-tab-general">
                     <div class="glass-card">
-                        <h2 style="font-size: 1.2rem; margin-bottom: 15px; color: var(--neon-blue);">⚙️ الإعدادات العامة للشركة وحساب الدخول</h2>
+                        <h2 style="font-size: 1.2rem; margin-bottom: 15px; color: var(--neon-blue);">⚙️ الإعدادات للشركة وحساب الدخول</h2>
                         
                         <div class="form-grid">
                             <div class="form-group" style="grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.02); padding: 20px; border-radius: 15px; border: 1px dashed rgba(255,255,255,0.1); margin-bottom: 20px;">
@@ -630,7 +630,7 @@
                             <div class="form-group">
                                 <label class="form-label">مصدر التجهيز *</label>
                                 <select id="comp-sourcing" class="form-control" onchange="onComponentSourcingChange()">
-                                    <option value="Stock">من المخزن البسيط (Deduct Stock)</option>
+                                    <option value="Stock">من المخزن (Deduct Stock)</option>
                                     <option value="Direct">شراء مباشر للموقع (Direct Expense)</option>
                                 </select>
                             </div>
@@ -663,7 +663,7 @@
                         </div>
                         <br>
                         <button id="btn-add-comp" class="btn btn-primary" onclick="addCustomerComponent()">➕ تسجيل القطعة وتثبيتها</button>
-                        <button id="btn-save-comp" class="btn btn-success" onclick="saveEditedComponent()" style="display:none;">💾 حفظ التعديلات</button>
+                        <button id="btn-save-comp" class="btn btn-success" onclick="saveEditedComponent()" style="display:none;">💾 حفظ</button>
                         <button id="btn-cancel-comp" class="btn btn-secondary" onclick="cancelEditComponent()" style="display:none;">❌ إلغاء التعديل</button>
 
                         <br><br>
