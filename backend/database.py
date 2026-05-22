@@ -25,6 +25,7 @@ def init_db():
             sale_type TEXT CHECK(sale_type IN ('Cash', 'Installment')),
             notes TEXT,
             system_status TEXT DEFAULT 'قيد التنفيذ',
+            gps_location TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')

@@ -1,6 +1,9 @@
 import os
 import sqlite3
+from dotenv import load_dotenv
+load_dotenv()
 import datetime
+from dateutil.relativedelta import relativedelta
 from flask import Flask, request, jsonify, render_template, send_from_directory, session, redirect, url_for
 from werkzeug.utils import secure_filename
 
@@ -26,7 +29,33 @@ app = Flask(__name__,
             static_url_path='/static',
             template_folder=FRONTEND_DIR)
 
-app.secret_key = 'shams_tek_secret_key_129038'
+app.secret_key = os.environ.get('SECRET_KEY', 'default_secret')
+
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
+
+from apscheduler.schedulers.background import BackgroundScheduler
+import datetime
+
+def update_overdue_installments():
+    with app.app_context():
+        today = datetime.datetime.now().strftime('%Y-%m-%d')
+        query_db("UPDATE installments SET status = 'Overdue' WHERE status = 'Unpaid' AND due_date < ?", (today,))
+
+try:
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(func=update_overdue_installments, trigger="interval", hours=24)
+    scheduler.start()
+except Exception as e:
+    print(f"Failed to start scheduler: {e}")
+
 UPLOAD_FOLDER = os.path.join(FRONTEND_DIR, 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024  # 32MB max upload
@@ -42,14 +71,27 @@ def favicon():
 with app.app_context():
     init_db()
 
+from flask import g
+
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = get_db_connection()
+    return db
+
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
+
 # Custom JSON helper
 def query_db(query, args=(), one=False):
-    conn = get_db_connection()
-    cur = conn.cursor()
+    db = get_db()
+    cur = db.cursor()
     cur.execute(query, args)
     rv = cur.fetchall()
-    conn.commit()
-    conn.close()
+    db.commit()
     return (rv[0] if rv else None) if one else rv
 
 # Authentication Decorator / Helper
@@ -95,6 +137,7 @@ def get_public_settings():
 
 # ----------------- AUTHENTICATION API -----------------
 @app.route('/api/login', methods=['POST'])
+@limiter.limit("5 per minute")
 def api_login():
     data = request.json or {}
     password = data.get('password')
@@ -103,11 +146,24 @@ def api_login():
     stored = query_db('SELECT value FROM settings WHERE key = ?', ('admin_password',), one=True)
     stored_password = stored['value'] if stored else 'admin'
     
-    if password == stored_password:
+    from werkzeug.security import check_password_hash, generate_password_hash
+    # Backward compatibility: if it is still plain 'admin', check normally
+    if stored_password == 'admin' and password == 'admin':
+        session['logged_in'] = True
+        return jsonify({'success': True, 'message': 'Logged in successfully'})
+        
+    if not stored_password.startswith('scrypt:') and not stored_password.startswith('pbkdf2:'):
+        if password == stored_password:
+            # Upgrade their password to hash seamlessly
+            hashed = generate_password_hash(password)
+            query_db('UPDATE settings SET value = ? WHERE key = ?', (hashed, 'admin_password'))
+            session['logged_in'] = True
+            return jsonify({'success': True, 'message': 'Logged in successfully'})
+    
+    if check_password_hash(stored_password, password):
         session['logged_in'] = True
         return jsonify({'success': True, 'message': 'Logged in successfully'})
     return jsonify({'success': False, 'message': 'كلمة المرور غير صحيحة'}), 401
-
 @app.route('/api/logout', methods=['POST'])
 def api_logout():
     session.pop('logged_in', None)
@@ -171,7 +227,11 @@ def get_customers():
     if not is_authenticated():
         return jsonify({'error': 'Unauthorized'}), 401
     
-    rows = query_db('SELECT * FROM customers ORDER BY created_at DESC')
+    page = request.args.get('page', 1, type=int)
+    limit = request.args.get('limit', 1000, type=int)
+    offset = (page - 1) * limit
+    
+    rows = query_db('SELECT * FROM customers ORDER BY created_at DESC LIMIT ? OFFSET ?', (limit, offset))
     customers = []
     for r in rows:
         c = dict(r)
@@ -548,8 +608,6 @@ def generate_installments(id):
     # Calculate equal installments
     installment_amount = round(remaining / count, 2)
     
-    import datetime
-    from dateutil.relativedelta import relativedelta
     
     try:
         base_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
@@ -811,8 +869,20 @@ def upload_document(id):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        # Determine simple type (Image, PDF, or Video)
-        file_ext = os.path.splitext(filename)[1].lower()
+        import filetype
+        
+        file_bytes = file.read(2048)
+        file.seek(0)
+        kind = filetype.guess(file_bytes)
+        
+        if kind is None:
+            return jsonify({'error': 'نوع الملف غير معروف'}), 400
+            
+        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'mp4', 'mov', 'avi', 'mkv', 'webm', '3gp', 'pdf'}
+        if kind.extension not in allowed_extensions:
+            return jsonify({'error': 'نوع الملف غير مسموح به'}), 400
+            
+        file_ext = '.' + kind.extension
         if file_ext in ['.png', '.jpg', '.jpeg', '.gif', '.webp']:
             file_type = 'صورة'
         elif file_ext in ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.3gp']:
@@ -883,9 +953,13 @@ def save_settings():
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
+        from werkzeug.security import generate_password_hash
         for k, v in data.items():
+            if k == 'admin_password':
+                v = generate_password_hash(str(v))
             cursor.execute('''
                 INSERT INTO settings (key, value)
+
                 VALUES (?, ?)
                 ON CONFLICT(key) DO UPDATE SET value = excluded.value
             ''', (k, str(v)))
