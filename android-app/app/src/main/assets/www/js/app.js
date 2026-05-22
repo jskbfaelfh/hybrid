@@ -340,7 +340,10 @@ let hasMoreCustomers = true;
 
 async function loadCustomers() {
     try {
-        document.getElementById('customers-page-label').innerText = `الصفحة ${currentCustomersPage}`;
+        const pageLabel = document.getElementById('customers-page-label');
+        if (pageLabel) {
+            pageLabel.innerText = `الصفحة ${currentCustomersPage}`;
+        }
         const res = await fetch(`/api/customers?page=${currentCustomersPage}&limit=${CUSTOMERS_PER_PAGE}`);
         const data = await res.json();
         
