@@ -1552,7 +1552,7 @@ async function printContractA4() {
             </div>
         `;
         
-        window.print();
+        setTimeout(() => { window.print(); }, 500);
     } catch (e) {
         alert('حدث خطأ أثناء معالجة العقد للطباعة');
     }
@@ -1580,7 +1580,7 @@ async function printWarrantyA4() {
             </div>
         `;
         
-        window.print();
+        setTimeout(() => { window.print(); }, 500);
     } catch (e) {
         alert('حدث خطأ أثناء توليد شهادة الضمان');
     }
@@ -1646,7 +1646,7 @@ async function printReceiptA4(instId) {
             </div>
         `;
         
-        window.print();
+        setTimeout(() => { window.print(); }, 500);
     } catch (e) {
         alert('حدث خطأ أثناء طباعة الوصل مالي');
     }

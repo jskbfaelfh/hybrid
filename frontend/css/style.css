@@ -730,6 +730,11 @@ select.form-control option {
     cursor: pointer;
 }
 
+/* Print Area Default Hidden */
+#print-area-container {
+    display: none;
+}
+
 /* 
    ==========================================================================
    CSS للطباعة الفاخرة A4 (Print Styles)
