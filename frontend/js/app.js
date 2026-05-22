@@ -4,6 +4,13 @@
    ==========================================================================
 */
 
+// Support Android Native Printing Bridge
+if (typeof window !== 'undefined' && window.AndroidBridge && window.AndroidBridge.triggerPrint) {
+    window.print = function() {
+        window.AndroidBridge.triggerPrint();
+    };
+}
+
 // Global variables and state
 let activeTab = 'dashboard';
 let currentCustomerId = null;
@@ -369,7 +376,6 @@ function nextCustomersPage() {
         currentCustomersPage++;
         loadCustomers();
     }
-}
 }
 
 function renderCustomersTable(customers) {

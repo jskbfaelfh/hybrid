@@ -334,17 +334,47 @@ function handle401(res) {
     return false;
 }
 
+let currentCustomersPage = 1;
+const CUSTOMERS_PER_PAGE = 50;
+let hasMoreCustomers = true;
+
 async function loadCustomers() {
     try {
-        const res = await fetch('/api/customers');
-        if (handle401(res)) return;
-        if (!res.ok) return;
+        document.getElementById('customers-page-label').innerText = `الصفحة ${currentCustomersPage}`;
+        const res = await fetch(`/api/customers?page=${currentCustomersPage}&limit=${CUSTOMERS_PER_PAGE}`);
         const data = await res.json();
+        
+        if (data.error) {
+            if (data.error === 'Unauthorized') showLogin();
+            else alert(data.error);
+            return;
+        }
+        
         allCustomers = data;
+        if (data.length < CUSTOMERS_PER_PAGE) {
+            hasMoreCustomers = false;
+        } else {
+            hasMoreCustomers = true;
+        }
+        
         renderCustomersTable(allCustomers);
-        setupCustomerSearch();
-    } catch (err) {
-        console.error('Error loading customers', err);
+        updateDashboardCounters(); // update counters based on loaded
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+function prevCustomersPage() {
+    if (currentCustomersPage > 1) {
+        currentCustomersPage--;
+        loadCustomers();
+    }
+}
+
+function nextCustomersPage() {
+    if (hasMoreCustomers) {
+        currentCustomersPage++;
+        loadCustomers();
     }
 }
 
@@ -756,7 +786,7 @@ async function loadProfileData() {
         currentCustomerData = cust;
         
         // 1. Title
-        document.getElementById('profile-title').innerHTML = `👤 ملف العميل المحترم: <span style="color: var(--neon-blue);">${cust.name}</span> (${cust.id})`;
+        document.getElementById('profile-title').innerHTML = `👤 <span style="color: var(--neon-blue);">${cust.name}</span> (${cust.id})`;
         
         // 2. Info Tab Inputs
         document.getElementById('prof-id').value = cust.id;
