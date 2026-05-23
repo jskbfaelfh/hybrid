@@ -4,3 +4,13 @@ __pycache__/
 scratch/
 backend/refactor_app.py
 backend/refactor_frontend.py
+
+# Ignore large compiled files & local DB
+.venv/
+*.exe
+*.apk
+*.db
+desktop-app/dist/
+desktop-app/build/
+desktop-app/icon.ico
+desktop-app/هايبرد_إينرجي.spec

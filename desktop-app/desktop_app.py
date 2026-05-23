@@ -2,10 +2,19 @@ import json
 import os
 import sys
 
+# Enable Chromium hardware acceleration flags before loading WebEngine
+os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--enable-gpu --enable-gpu-rasterization --enable-oop-rasterization --enable-zero-copy --ignore-gpu-blocklist --enable-webgl"
+
 # Top-level imports for PyInstaller to bundle them properly
 try:
-    from PyQt5.QtCore import QTimer
+    from PyQt5.QtCore import QTimer, QCoreApplication, Qt
     from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
+    from PyQt5.QtGui import QIcon
+    
+    # Share OpenGL context to enable GPU acceleration in QWebEngineView
+    QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts, True)
+    # Use desktop OpenGL for hardware acceleration
+    QCoreApplication.setAttribute(Qt.AA_UseDesktopOpenGL, True)
 except ImportError:
     pass
 
@@ -225,7 +234,7 @@ HTML_CONTENT = """<!DOCTYPE html>
             <div class="form-group">
                 <label for="url-input">رابط خادم النظام (Server URL)</label>
                 <div class="input-wrapper">
-                    <input type="text" id="url-input" placeholder="http://192.168.1.100:5000" value="http://localhost:5000">
+                    <input type="text" id="url-input" placeholder="https://your-app.up.railway.app" value="https://web-production-47819.up.railway.app">
                 </div>
                 <div class="error-message" id="error-msg"></div>
             </div>
@@ -278,33 +287,35 @@ HTML_CONTENT = """<!DOCTYPE html>
 
 class DesktopBridge:
     def __init__(self):
-        self.window = None
+        self._window = None
         # Persistent JSON config located in the same directory as the app executable
         if getattr(sys, 'frozen', False):
             # Running as bundled EXE
-            self.app_dir = os.path.dirname(sys.executable)
+            self._app_dir = os.path.dirname(sys.executable)
         else:
             # Running as Python script
-            self.app_dir = os.path.dirname(os.path.abspath(__file__))
+            self._app_dir = os.path.dirname(os.path.abspath(__file__))
             
-        self.config_path = os.path.join(self.app_dir, "config.json")
+        self._config_path = os.path.join(self._app_dir, "config.json")
+        self._printer = None
         
     def get_saved_url(self):
-        if os.path.exists(self.config_path):
+        if os.path.exists(self._config_path):
             try:
-                with open(self.config_path, "r", encoding="utf-8") as f:
+                with open(self._config_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    return data.get("server_url", "")
+                    if "server_url" in data:
+                        return data["server_url"]
             except Exception:
                 pass
-        return ""
+        return "https://web-production-47819.up.railway.app"
         
     def save_url(self, url):
         try:
-            with open(self.config_path, "w", encoding="utf-8") as f:
+            with open(self._config_path, "w", encoding="utf-8") as f:
                 json.dump({"server_url": url}, f, ensure_ascii=False, indent=4)
             # Switch view dynamically from local HTML config to the target Server URL
-            self.window.load_url(url)
+            self._window.load_url(url)
             return {"status": "success"}
         except Exception as e:
             return {"status": "error", "message": str(e)}
@@ -324,14 +335,14 @@ class DesktopBridge:
             
     def reset_server_url(self):
         try:
-            with open(self.config_path, "w", encoding="utf-8") as f:
+            with open(self._config_path, "w", encoding="utf-8") as f:
                 json.dump({"server_url": ""}, f, ensure_ascii=False, indent=4)
         except Exception:
             pass
         # Reload the clean local config screen HTML
-        self.window.load_html(HTML_CONTENT)
+        self._window.load_html(HTML_CONTENT)
 
-    def trigger_print(self):
+    def trigger_print(self, *args, **kwargs):
         try:
             QTimer.singleShot(0, self._do_print)
         except Exception as e:
@@ -339,19 +350,30 @@ class DesktopBridge:
 
     def _do_print(self):
         try:
-            if not self.window or not hasattr(self.window, 'native') or not self.window.native:
+            if not self._window or not hasattr(self._window, 'native') or not self._window.native:
                 return
             
-            webview_widget = self.window.native.webview
+            webview_widget = self._window.native.webview
             page = webview_widget.page()
             
-            printer = QPrinter(QPrinter.HighResolution)
-            dialog = QPrintDialog(printer, self.window.native)
+            # Use ScreenResolution to preserve web page print styles and font sizes properly
+            # Keep a reference to the printer on the instance to prevent garbage collection
+            self._printer = QPrinter(QPrinter.ScreenResolution)
+            # Enforce A4 layout
+            self._printer.setPageSize(QPrinter.A4)
+            
+            dialog = QPrintDialog(self._printer, self._window.native)
             dialog.setWindowTitle("طباعة - هايبرد إينرجي")
             if dialog.exec_() == QPrintDialog.Accepted:
-                page.print(printer, lambda success: print(f"Printing finished with status: {success}"))
+                def print_callback(success):
+                    print(f"Printing finished with status: {success}")
+                    self._printer = None
+                page.print(self._printer, print_callback)
+            else:
+                self._printer = None
         except Exception as e:
             print("Error in _do_print:", e)
+            self._printer = None
 
 
 def setup_printing(window):
@@ -360,14 +382,41 @@ def setup_printing(window):
             window._print_setup_done = True
             try:
                 page = window.native.webview.page()
-                page.printRequested.connect(lambda: window.pywebview.api.trigger_print())
+                # Connect printRequested signal to window._bridge.trigger_print safely
+                page.printRequested.connect(lambda: window._bridge.trigger_print() if hasattr(window, '_bridge') else None)
             except Exception as e:
                 print("Failed to connect native printRequested signal:", e)
 
 
+def setup_icon(window):
+    if hasattr(window, 'native') and window.native:
+        try:
+            from PyQt5.QtGui import QIcon
+            app_dir = window._bridge._app_dir if hasattr(window, '_bridge') else os.path.dirname(os.path.abspath(__file__))
+            
+            # Check multiple potential locations for icon
+            paths = [
+                os.path.join(app_dir, "icon.png"),
+                os.path.join(app_dir, "icon.ico"),
+                os.path.join(app_dir, "desktop-app", "icon.ico"),
+                os.path.join(app_dir, "..", "icon.png"),
+            ]
+            for p in paths:
+                if os.path.exists(p):
+                    window.native.setWindowIcon(QIcon(p))
+                    break
+        except Exception as e:
+            print("Failed to set window icon:", e)
+
+
 def on_loaded(window):
-    # Setup native printing connections
-    setup_printing(window)
+    try:
+        from PyQt5.QtCore import QTimer
+        # Safely run GUI-touching setup on the main Qt thread to prevent event loop freezes
+        QTimer.singleShot(0, lambda: setup_printing(window))
+        QTimer.singleShot(0, lambda: setup_icon(window))
+    except Exception as e:
+        print("Failed to dispatch thread-safe setup:", e)
 
     # Auto inject HTML5 Notification API wrapper/shim
     # This maps dashboard notifications to the Python/Windows native toast bridge
@@ -427,7 +476,8 @@ def main():
             resizable=True
         )
         
-    bridge.window = window
+    bridge._window = window
+    window._bridge = bridge
     
     # Bind WebView load finish event to automatically inject our bridge script
     window.events.loaded += lambda: on_loaded(window)
