@@ -28,6 +28,48 @@
     
     --sidebar-width: 280px;
     --transition-speed: 0.3s;
+
+    --bg-sidebar: rgba(10, 15, 30, 0.85);
+    --gradient-color-1: rgba(16, 185, 129, 0.12);
+    --gradient-color-2: rgba(139, 92, 246, 0.1);
+    --gradient-color-3: rgba(13, 22, 38, 0.6);
+    
+    --bg-input: rgba(255, 255, 255, 0.02);
+    --border-input: rgba(255, 255, 255, 0.07);
+    --text-input: #ffffff;
+    --bg-select-option: #060913;
+}
+
+[data-theme="light"] {
+    --bg-main: #f3f4f6;
+    --bg-card: rgba(255, 255, 255, 0.85);
+    --border-card: rgba(0, 0, 0, 0.08);
+    --border-glow: rgba(16, 185, 129, 0.2);
+    
+    --neon-blue: #059669;
+    --neon-blue-glow: rgba(5, 150, 105, 0.2);
+    --neon-orange: #7c3aed;
+    --neon-orange-glow: rgba(124, 58, 237, 0.2);
+    
+    --text-primary: #111827;
+    --text-secondary: #374151;
+    --text-muted: #6b7280;
+    
+    --success: #059669;
+    --success-glow: rgba(5, 150, 105, 0.15);
+    --warning: #d97706;
+    --danger: #dc2626;
+    --danger-glow: rgba(220, 38, 38, 0.15);
+
+    --bg-sidebar: rgba(255, 255, 255, 0.95);
+    --gradient-color-1: rgba(16, 185, 129, 0.06);
+    --gradient-color-2: rgba(139, 92, 246, 0.05);
+    --gradient-color-3: rgba(255, 255, 255, 0.4);
+
+    --bg-input: rgba(0, 0, 0, 0.03);
+    --border-input: rgba(0, 0, 0, 0.1);
+    --text-input: #111827;
+    --bg-select-option: #ffffff;
 }
 
 /* Base Styles & Reset */
@@ -48,9 +90,9 @@ html {
 body {
     background-color: var(--bg-main);
     background-image: 
-        radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.12) 0px, transparent 45%),
-        radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.1) 0px, transparent 45%),
-        radial-gradient(at 50% 50%, rgba(13, 22, 38, 0.6) 0px, transparent 80%);
+        radial-gradient(at 0% 0%, var(--gradient-color-1) 0px, transparent 45%),
+        radial-gradient(at 100% 100%, var(--gradient-color-2) 0px, transparent 45%),
+        radial-gradient(at 50% 50%, var(--gradient-color-3) 0px, transparent 80%);
     background-attachment: fixed;
     color: var(--text-primary);
     min-height: 100vh;
@@ -86,7 +128,7 @@ body {
 /* Sidebar Styling */
 .sidebar {
     width: var(--sidebar-width);
-    background: rgba(10, 15, 30, 0.85);
+    background: var(--bg-sidebar);
     border-left: 1px solid var(--border-card);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -555,30 +597,30 @@ body {
 }
 
 .form-control {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: var(--bg-input);
+    border: 1px solid var(--border-input);
     padding: 12px 16px;
     border-radius: 10px;
-    color: #fff;
+    color: var(--text-input);
     font-size: 0.95rem;
     transition: all 0.3s ease;
 }
 
 select.form-control {
-    background-color: #060913;
-    color: #fff;
+    background-color: var(--bg-select-option);
+    color: var(--text-input);
 }
 
 select.form-control option {
-    background-color: #060913;
-    color: #fff;
+    background-color: var(--bg-select-option);
+    color: var(--text-input);
 }
 
 .form-control:focus {
     outline: none;
     border-color: var(--neon-blue);
-    background: rgba(255, 255, 255, 0.05);
-    box-shadow: 0 0 10px rgba(0, 242, 254, 0.1);
+    background: var(--bg-input);
+    box-shadow: 0 0 10px var(--neon-blue-glow);
 }
 
 /* Search bar header details */

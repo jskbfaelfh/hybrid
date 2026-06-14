@@ -27,6 +27,23 @@ document.addEventListener('DOMContentLoaded', function() {
     initApp();
 });
 
+// Theme Switching functionality
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+}
+
+function updateThemeIcon(theme) {
+    const iconSpan = document.getElementById('themeToggleIcon');
+    if (iconSpan) {
+        iconSpan.innerText = theme === 'light' ? '🌙' : '☀️';
+    }
+}
+
 // Initialize the application
 function initApp() {
     setupNavigation();
@@ -36,6 +53,10 @@ function initApp() {
     setupLogout();
     loadSettings(); // Load custom settings & logo on startup!
     initNotifications(); // Setup Browser Web Notifications System!
+    
+    // Initialize Theme Icon state
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    updateThemeIcon(currentTheme);
     
     // Refresh dashboard data occasionally
     setInterval(loadDashboardStats, 60000);

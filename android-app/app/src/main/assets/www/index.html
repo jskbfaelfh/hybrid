@@ -9,6 +9,13 @@
     <!-- Chart.js for beautiful interactive dashboards -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="/static/css/style.css?v=2">
+    <script>
+        // Apply theme immediately before rendering to prevent flash of unstyled content
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
 </head>
 <body>
 
@@ -64,6 +71,11 @@
                     </div>
                 </div>
                 <div class="system-status" style="gap: 15px;">
+                    <!-- Theme Toggle Button -->
+                    <button id="themeToggleBtn" onclick="toggleTheme()" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-card); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-primary); transition: all 0.25s ease; font-size: 1rem;" title="تبديل المظهر">
+                        <span id="themeToggleIcon">☀️</span>
+                    </button>
+                    <div style="width: 1px; height: 15px; background: rgba(255,255,255,0.15);"></div>
                     <div id="notification-status-badge" style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.82rem;" onclick="requestNotificationPermissionManual()">
                         <span id="notification-status-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #9ca3af; display: inline-block;"></span>
                         <span id="notification-status-text" style="color: var(--text-secondary);">تهيئة الإشعارات...</span>
