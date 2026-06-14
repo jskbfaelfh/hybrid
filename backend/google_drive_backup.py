@@ -21,9 +21,11 @@ DB_PATH = os.path.join(BASE_DIR, 'solar_db.db')
 
 def get_db_connection():
     # Helper to prevent circular imports if needed
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    try:
+        from backend.database import get_db_connection as db_conn
+    except ImportError:
+        from database import get_db_connection as db_conn
+    return db_conn()
 
 def is_internet_available():
     try:

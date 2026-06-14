@@ -5,10 +5,101 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'solar_db.db')
 
+class LibsqlRow:
+    def __init__(self, colnames, values):
+        self._colnames = colnames
+        self._values = values
+        self._dict = dict(zip(colnames, values))
+        
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self._values[key]
+        return self._dict[key]
+        
+    def get(self, key, default=None):
+        return self._dict.get(key, default)
+        
+    def keys(self):
+        return self._colnames
+        
+    def __repr__(self):
+        return repr(self._dict)
+        
+    def __iter__(self):
+        return iter(self._values)
+
+class LibsqlCursorWrapper:
+    def __init__(self, cursor):
+        self._cursor = cursor
+        self.description = None
+
+    def execute(self, sql, parameters=()):
+        try:
+            self._cursor.execute(sql, parameters)
+            self.description = self._cursor.description
+            return self
+        except Exception as e:
+            err_msg = str(e).lower()
+            if "unique" in err_msg or "integrity" in err_msg or "constraint" in err_msg:
+                raise sqlite3.IntegrityError(str(e))
+            raise sqlite3.DatabaseError(str(e))
+
+    def fetchone(self):
+        row = self._cursor.fetchone()
+        if row is None:
+            return None
+        colnames = [desc[0] for desc in self._cursor.description]
+        return LibsqlRow(colnames, row)
+
+    def fetchall(self):
+        rows = self._cursor.fetchall()
+        colnames = [desc[0] for desc in self._cursor.description]
+        return [LibsqlRow(colnames, r) for r in rows]
+
+    @property
+    def lastrowid(self):
+        return self._cursor.lastrowid
+
+    @property
+    def rowcount(self):
+        return self._cursor.rowcount
+
+    def close(self):
+        self._cursor.close()
+
+class LibsqlConnectionWrapper:
+    def __init__(self, conn):
+        self._conn = conn
+
+    def cursor(self):
+        return LibsqlCursorWrapper(self._conn.cursor())
+
+    def execute(self, sql, parameters=()):
+        cursor = self.cursor()
+        cursor.execute(sql, parameters)
+        return cursor
+
+    def commit(self):
+        self._conn.commit()
+
+    def rollback(self):
+        self._conn.rollback()
+
+    def close(self):
+        self._conn.close()
+
 def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    turso_url = os.environ.get("TURSO_DATABASE_URL")
+    turso_token = os.environ.get("TURSO_AUTH_TOKEN")
+    
+    if turso_url and turso_token:
+        import libsql
+        conn = libsql.connect(turso_url, auth_token=turso_token)
+        return LibsqlConnectionWrapper(conn)
+    else:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        return conn
 
 def init_db():
     conn = get_db_connection()

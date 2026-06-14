@@ -41,35 +41,35 @@
 }
 
 [data-theme="light"] {
-    --bg-main: #f3f4f6;
-    --bg-card: rgba(255, 255, 255, 0.85);
-    --border-card: rgba(0, 0, 0, 0.08);
-    --border-glow: rgba(16, 185, 129, 0.2);
+    --bg-main: #b2c1d3;
+    --bg-card: #e2e8f0;
+    --border-card: rgba(0, 0, 0, 0.1);
+    --border-glow: rgba(16, 185, 129, 0.3);
     
-    --neon-blue: #059669;
-    --neon-blue-glow: rgba(5, 150, 105, 0.2);
-    --neon-orange: #7c3aed;
-    --neon-orange-glow: rgba(124, 58, 237, 0.2);
+    --neon-blue: #047857;
+    --neon-blue-glow: rgba(4, 120, 87, 0.2);
+    --neon-orange: #6d28d9;
+    --neon-orange-glow: rgba(109, 40, 217, 0.2);
     
-    --text-primary: #111827;
-    --text-secondary: #374151;
-    --text-muted: #6b7280;
+    --text-primary: #0f172a;
+    --text-secondary: #1e293b;
+    --text-muted: #475569;
     
-    --success: #059669;
-    --success-glow: rgba(5, 150, 105, 0.15);
-    --warning: #d97706;
-    --danger: #dc2626;
-    --danger-glow: rgba(220, 38, 38, 0.15);
+    --success: #047857;
+    --success-glow: rgba(4, 120, 87, 0.15);
+    --warning: #b45309;
+    --danger: #b91c1c;
+    --danger-glow: rgba(185, 28, 28, 0.15);
 
-    --bg-sidebar: rgba(255, 255, 255, 0.95);
-    --gradient-color-1: rgba(16, 185, 129, 0.06);
-    --gradient-color-2: rgba(139, 92, 246, 0.05);
-    --gradient-color-3: rgba(255, 255, 255, 0.4);
+    --bg-sidebar: #cbd5e1;
+    --gradient-color-1: rgba(16, 185, 129, 0.04);
+    --gradient-color-2: rgba(139, 92, 246, 0.03);
+    --gradient-color-3: rgba(255, 255, 255, 0.15);
 
-    --bg-input: rgba(0, 0, 0, 0.03);
-    --border-input: rgba(0, 0, 0, 0.1);
-    --text-input: #111827;
-    --bg-select-option: #ffffff;
+    --bg-input: #f1f5f9;
+    --border-input: rgba(0, 0, 0, 0.15);
+    --text-input: #0f172a;
+    --bg-select-option: #f1f5f9;
 }
 
 /* Base Styles & Reset */
@@ -189,7 +189,7 @@ body {
 
 .menu-item a:hover {
     background: rgba(255, 255, 255, 0.03);
-    color: #fff;
+    color: var(--text-primary);
     border-color: rgba(255, 255, 255, 0.05);
 }
 
@@ -382,7 +382,7 @@ body {
 
 .custom-table tbody tr:hover td {
     background: rgba(255, 255, 255, 0.02);
-    color: #fff;
+    color: var(--text-primary);
 }
 
 /* Status Badges */
@@ -527,7 +527,7 @@ body {
 }
 
 .modal-close:hover {
-    color: #fff;
+    color: var(--text-primary);
 }
 
 .modal-body {
@@ -556,7 +556,7 @@ body {
 }
 
 .tab-btn:hover {
-    color: #fff;
+    color: var(--text-primary);
 }
 
 .tab-btn.active {
@@ -933,7 +933,7 @@ select.form-control option {
     display: none;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #fff;
+    color: var(--text-primary);
     font-size: 1.4rem;
     padding: 8px 12px;
     border-radius: 10px;
