@@ -2,19 +2,14 @@ import json
 import os
 import sys
 
-# Enable Chromium hardware acceleration flags before loading WebEngine
-os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--enable-gpu --enable-gpu-rasterization --enable-oop-rasterization --enable-zero-copy --ignore-gpu-blocklist --enable-webgl"
+# Disable GPU acceleration to prevent screen flickering/blinking on some Windows graphics drivers
+os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--disable-gpu --disable-software-rasterizer"
 
 # Top-level imports for PyInstaller to bundle them properly
 try:
     from PyQt5.QtCore import QTimer, QCoreApplication, Qt
     from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
     from PyQt5.QtGui import QIcon
-    
-    # Share OpenGL context to enable GPU acceleration in QWebEngineView
-    QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts, True)
-    # Use desktop OpenGL for hardware acceleration
-    QCoreApplication.setAttribute(Qt.AA_UseDesktopOpenGL, True)
 except ImportError:
     pass
 
