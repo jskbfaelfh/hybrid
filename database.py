@@ -86,14 +86,129 @@ class LibsqlConnectionWrapper:
     def close(self):
         self._conn.close()
 
+# Fallback classes for pure-python HTTP-based libsql-client
+class LibsqlClientRow:
+    def __init__(self, colnames, values):
+        self._colnames = colnames
+        self._values = values
+        self._dict = dict(zip(colnames, values))
+        
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self._values[key]
+        return self._dict[key]
+        
+    def get(self, key, default=None):
+        return self._dict.get(key, default)
+        
+    def keys(self):
+        return self._colnames
+        
+    def __repr__(self):
+        return repr(self._dict)
+        
+    def __iter__(self):
+        return iter(self._values)
+
+class LibsqlClientCursorWrapper:
+    def __init__(self, client):
+        self._client = client
+        self.description = None
+        self._rows = []
+        self._index = 0
+        self.lastrowid = None
+        self.rowcount = -1
+
+    def execute(self, sql, parameters=()):
+        try:
+            res = self._client.execute(sql, parameters)
+            self._rows = res.rows
+            self._index = 0
+            self.description = [(col, None, None, None, None, None, None) for col in res.columns]
+            self.rowcount = len(res.rows)
+            self.lastrowid = getattr(res, "last_insert_rowid", None)
+            return self
+        except Exception as e:
+            err_msg = str(e).lower()
+            if "unique" in err_msg or "integrity" in err_msg or "constraint" in err_msg:
+                raise sqlite3.IntegrityError(str(e))
+            raise sqlite3.DatabaseError(str(e))
+
+    def fetchone(self):
+        if self._index >= len(self._rows):
+            return None
+        row = self._rows[self._index]
+        self._index += 1
+        colnames = [desc[0] for desc in self.description]
+        return LibsqlClientRow(colnames, row)
+
+    def fetchall(self):
+        colnames = [desc[0] for desc in self.description]
+        res = [LibsqlClientRow(colnames, r) for r in self._rows[self._index:]]
+        self._index = len(self._rows)
+        return res
+
+    def close(self):
+        pass
+
+class LibsqlClientConnectionWrapper:
+    def __init__(self, client):
+        self._client = client
+
+    def cursor(self):
+        return LibsqlClientCursorWrapper(self._client)
+
+    def execute(self, sql, parameters=()):
+        cursor = self.cursor()
+        cursor.execute(sql, parameters)
+        return cursor
+
+    def commit(self):
+        pass
+
+    def rollback(self):
+        pass
+
+    def close(self):
+        try:
+            self._client.close()
+        except Exception:
+            pass
+
 def get_db_connection():
     turso_url = os.environ.get("TURSO_DATABASE_URL")
     turso_token = os.environ.get("TURSO_AUTH_TOKEN")
     
     if turso_url and turso_token:
-        import libsql
-        conn = libsql.connect(turso_url, auth_token=turso_token)
-        return LibsqlConnectionWrapper(conn)
+        # 1. Try native libsql package (has binary dependency)
+        try:
+            import libsql
+            conn = libsql.connect(turso_url, auth_token=turso_token)
+            return LibsqlConnectionWrapper(conn)
+        except (ImportError, Exception) as e:
+            print(f"Native libsql failed to load/connect ({e}). Falling back to pure-python libsql_client...")
+            # 2. Try pure-python HTTP-based libsql-client
+            try:
+                import libsql_client
+                # Format URL: ensure it starts with https:// for libsql_client HTTP mode
+                http_url = turso_url
+                if http_url.startswith("libsql://"):
+                    http_url = "https://" + http_url[9:]
+                elif http_url.startswith("ws://"):
+                    http_url = "http://" + http_url[5:]
+                elif http_url.startswith("wss://"):
+                    http_url = "https://" + http_url[6:]
+                
+                if "?" in http_url:
+                    conn_url = f"{http_url}&authToken={turso_token}"
+                else:
+                    conn_url = f"{http_url}?authToken={turso_token}"
+                
+                client = libsql_client.create_client_sync(conn_url)
+                return LibsqlClientConnectionWrapper(client)
+            except Exception as e_fallback:
+                print(f"libsql_client fallback failed: {e_fallback}")
+                raise RuntimeError(f"Database connection failed: {e}. Fallback error: {e_fallback}")
     else:
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row

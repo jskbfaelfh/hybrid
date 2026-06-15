@@ -231,16 +231,55 @@ def get_customers():
     limit = request.args.get('limit', 1000, type=int)
     offset = (page - 1) * limit
     
-    rows = query_db('SELECT * FROM customers ORDER BY created_at DESC LIMIT ? OFFSET ?', (limit, offset))
+    rows = query_db('''
+        SELECT 
+            c.*, 
+            f.total_price,
+            f.down_payment,
+            f.remaining_balance,
+            f.total_installments,
+            COALESCE(cc.comp_count, 0) as comp_count
+        FROM customers c
+        LEFT JOIN financial_status f ON c.id = f.customer_id
+        LEFT JOIN (
+            SELECT customer_id, COUNT(*) as comp_count 
+            FROM customer_components 
+            GROUP BY customer_id
+        ) cc ON c.id = cc.customer_id
+        ORDER BY c.created_at DESC
+        LIMIT ? OFFSET ?
+    ''', (limit, offset))
+    
     customers = []
     for r in rows:
-        c = dict(r)
-        # Fetch components count and financial summary
-        fin = query_db('SELECT * FROM financial_status WHERE customer_id = ?', (c['id'],), one=True)
-        c['financials'] = dict(fin) if fin else None
+        c = {
+            'id': r['id'],
+            'name': r['name'],
+            'phone': r['phone'],
+            'address': r['address'],
+            'installation_date': r['installation_date'],
+            'sale_type': r['sale_type'],
+            'notes': r['notes'],
+            'system_status': r.get('system_status', 'قيد التنفيذ'),
+            'gps_location': r.get('gps_location', ''),
+            'installation_method': r.get('installation_method', ''),
+            'gps_link': r.get('gps_link', ''),
+            'created_at': r['created_at']
+        }
         
-        comps = query_db('SELECT COUNT(*) as count FROM customer_components WHERE customer_id = ?', (c['id'],), one=True)
-        c['components_count'] = comps['count'] if comps else 0
+        # Reconstruct financials sub-dict if it exists
+        if r['total_price'] is not None:
+            c['financials'] = {
+                'customer_id': r['id'],
+                'total_price': r['total_price'],
+                'down_payment': r['down_payment'],
+                'remaining_balance': r['remaining_balance'],
+                'total_installments': r['total_installments']
+            }
+        else:
+            c['financials'] = None
+            
+        c['components_count'] = r['comp_count']
         customers.append(c)
         
     return jsonify(customers)
