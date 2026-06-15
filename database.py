@@ -40,6 +40,8 @@ class LibsqlCursorWrapper:
             err_msg = str(e).lower()
             if "unique" in err_msg or "integrity" in err_msg or "constraint" in err_msg:
                 raise sqlite3.IntegrityError(str(e))
+            if "duplicate column" in err_msg or "already exists" in err_msg:
+                raise sqlite3.OperationalError(str(e))
             raise sqlite3.DatabaseError(str(e))
 
     def fetchone(self):
@@ -132,6 +134,8 @@ class LibsqlClientCursorWrapper:
             err_msg = str(e).lower()
             if "unique" in err_msg or "integrity" in err_msg or "constraint" in err_msg:
                 raise sqlite3.IntegrityError(str(e))
+            if "duplicate column" in err_msg or "already exists" in err_msg:
+                raise sqlite3.OperationalError(str(e))
             raise sqlite3.DatabaseError(str(e))
 
     def fetchone(self):
