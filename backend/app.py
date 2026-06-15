@@ -883,6 +883,32 @@ def delete_inventory_item(item_id):
         
     return jsonify({'success': True, 'message': 'تم حذف المادة من المخزن'})
 
+# Helper to save file or fallback to base64 Data URI on read-only environments
+def save_uploaded_file(file, filename, upload_folder):
+    import base64
+    file.seek(0)
+    file_bytes = file.read()
+    file.seek(0)
+    
+    file_path = os.path.join(upload_folder, filename)
+    try:
+        file.save(file_path)
+        return filename, True
+    except OSError:
+        # Fallback to base64 Data URI
+        file_ext = os.path.splitext(filename)[1].lower()
+        mime_type = "application/octet-stream"
+        if file_ext in [".png", ".jpg", ".jpeg", ".gif", ".webp"]:
+            mime_type = f"image/{file_ext[1:] if file_ext != '.jpg' else 'jpeg'}"
+        elif file_ext in [".mp4", ".webm"]:
+            mime_type = f"video/{file_ext[1:]}"
+        elif file_ext == ".pdf":
+            mime_type = "application/pdf"
+            
+        b64_data = base64.b64encode(file_bytes).decode("utf-8")
+        data_uri = f"data:{mime_type};base64,{b64_data}"
+        return data_uri, False
+
 # ----------------- UPLOAD DOCUMENTS & PHOTOS -----------------
 @app.route('/api/customers/<id>/upload', methods=['POST'])
 def upload_document(id):
@@ -900,9 +926,9 @@ def upload_document(id):
     # Give a unique filename based on customer and time
     import time
     unique_filename = f"{id}_{int(time.time())}_{filename}"
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
     
-    file.save(file_path)
+    # Save file or convert to base64
+    stored_val, saved_local = save_uploaded_file(file, unique_filename, app.config['UPLOAD_FOLDER'])
     
     # Store path in database
     conn = get_db_connection()
@@ -910,6 +936,7 @@ def upload_document(id):
     try:
         import filetype
         
+        file.seek(0)
         file_bytes = file.read(2048)
         file.seek(0)
         kind = filetype.guess(file_bytes)
@@ -932,7 +959,7 @@ def upload_document(id):
         cursor.execute('''
             INSERT INTO documents (customer_id, file_name, file_type, file_path)
             VALUES (?, ?, ?, ?)
-        ''', (id, filename, file_type, unique_filename))
+        ''', (id, filename, file_type, stored_val))
         conn.commit()
     except Exception as e:
         conn.rollback()
@@ -1030,9 +1057,9 @@ def upload_logo():
         
     import time
     unique_filename = f"logo_{int(time.time())}{file_ext}"
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
     
-    file.save(file_path)
+    # Save file or convert to base64
+    stored_val, saved_local = save_uploaded_file(file, unique_filename, app.config['UPLOAD_FOLDER'])
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -1041,7 +1068,7 @@ def upload_logo():
             INSERT INTO settings (key, value)
             VALUES (?, ?)
             ON CONFLICT(key) DO UPDATE SET value = excluded.value
-        ''', ('company_logo', unique_filename))
+        ''', ('company_logo', stored_val))
         conn.commit()
     except Exception as e:
         conn.rollback()
@@ -1049,7 +1076,7 @@ def upload_logo():
     finally:
         conn.close()
         
-    return jsonify({'success': True, 'message': 'تم رفع وتعديل الشعار بنجاح', 'logo_path': unique_filename})
+    return jsonify({'success': True, 'message': 'تم رفع وتعديل الشعار بنجاح', 'logo_path': stored_val})
 
 @app.route('/api/settings/upload-print-image/<type_name>', methods=['POST'])
 def upload_print_image(type_name):
@@ -1079,9 +1106,9 @@ def upload_print_image(type_name):
         
     import time
     unique_filename = f"print_{type_name}_{int(time.time())}{file_ext}"
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
     
-    file.save(file_path)
+    # Save file or convert to base64
+    stored_val, saved_local = save_uploaded_file(file, unique_filename, app.config['UPLOAD_FOLDER'])
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -1091,7 +1118,7 @@ def upload_print_image(type_name):
             INSERT INTO settings (key, value)
             VALUES (?, ?)
             ON CONFLICT(key) DO UPDATE SET value = excluded.value
-        ''', (db_key, unique_filename))
+        ''', (db_key, stored_val))
         conn.commit()
     except Exception as e:
         conn.rollback()

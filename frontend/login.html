@@ -219,7 +219,11 @@
                         const defaultLogo = document.getElementById('defaultLogo');
                         const serverUrl = localStorage.getItem('backend_url') || '';
                         
-                        img.src = (isApp ? serverUrl : '') + '/static/uploads/' + data.company_logo;
+                        if (data.company_logo.startsWith('data:')) {
+                            img.src = data.company_logo;
+                        } else {
+                            img.src = (isApp ? serverUrl : '') + '/static/uploads/' + data.company_logo;
+                        }
                         img.style.display = 'inline-block';
                         defaultLogo.style.display = 'none';
                     }

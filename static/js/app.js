@@ -11,6 +11,13 @@ if (typeof window !== 'undefined' && window.AndroidBridge && window.AndroidBridg
     };
 }
 
+// Path resolver for base64 / standard uploads
+function resolveUploadPath(filename) {
+    if (!filename) return '';
+    if (filename.startsWith('data:')) return filename;
+    return `/static/uploads/${filename}`;
+}
+
 // Global variables and state
 let activeTab = 'dashboard';
 let currentCustomerId = null;
@@ -623,11 +630,11 @@ async function openSystemDetailsModal(id) {
                 box.style = "position: relative; width: 100%; height: 120px; border-radius: 8px; overflow: hidden; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center;";
                 
                 if (isImage) {
-                    box.innerHTML = `<img src="/static/uploads/${doc.file_path}" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;" onclick="window.open('/static/uploads/${doc.file_path}', '_blank')">`;
+                    box.innerHTML = `<img src="${resolveUploadPath(doc.file_path)}" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;" onclick="window.open('${resolveUploadPath(doc.file_path)}', '_blank')">`;
                 } else if (isVideo) {
-                    box.innerHTML = `<video src="/static/uploads/${doc.file_path}" style="width: 100%; height: 100%; object-fit: cover;" controls></video>`;
+                    box.innerHTML = `<video src="${resolveUploadPath(doc.file_path)}" style="width: 100%; height: 100%; object-fit: cover;" controls></video>`;
                 } else {
-                    box.innerHTML = `<a href="/static/uploads/${doc.file_path}" target="_blank" style="color: var(--neon-blue); text-decoration: none; font-size: 0.8rem; text-align: center; padding: 10px;">📄 ${doc.file_name}</a>`;
+                    box.innerHTML = `<a href="${resolveUploadPath(doc.file_path)}" target="_blank" style="color: var(--neon-blue); text-decoration: none; font-size: 0.8rem; text-align: center; padding: 10px;">📄 ${doc.file_name}</a>`;
                 }
                 
                 mediaContainer.appendChild(box);
@@ -1453,7 +1460,7 @@ function renderProfileVault(documents) {
         if (doc.file_type === 'صورة') {
             icon = '🖼️';
             preview = `<div style="width: 100%; height: 90px; border-radius: 8px; overflow: hidden; margin-bottom: 8px; background: rgba(0,0,0,0.2);">
-                <img src="/static/uploads/${doc.file_path}" style="width: 100%; height: 100%; object-fit: cover;">
+                <img src="${resolveUploadPath(doc.file_path)}" style="width: 100%; height: 100%; object-fit: cover;">
             </div>`;
         } else {
             icon = '📄';
@@ -1464,7 +1471,7 @@ function renderProfileVault(documents) {
             ${preview}
             <div class="name" title="${doc.file_name}">${doc.file_name}</div>
             <div class="actions">
-                <a href="/static/uploads/${doc.file_path}" target="_blank" class="btn btn-success" style="padding: 4px 8px; font-size: 0.75rem;">👀 عرض</a>
+                <a href="${resolveUploadPath(doc.file_path)}" target="_blank" class="btn btn-success" style="padding: 4px 8px; font-size: 0.75rem;">👀 عرض</a>
                 <button class="btn btn-danger" onclick="deleteVaultFile(${doc.id})" style="padding: 4px 8px; font-size: 0.75rem;">🗑️</button>
             </div>
         `;
@@ -1513,7 +1520,7 @@ function compileTemplateString(templateStr, companyInfo) {
     const today = new Date().toLocaleDateString('ar-IQ');
     let logoTag = `☀️`;
     if (companyInfo && companyInfo.logo) {
-        logoTag = `<img src="/static/uploads/${companyInfo.logo}" style="max-height: 70px; object-fit: contain; display: block;">`;
+        logoTag = `<img src="${resolveUploadPath(companyInfo.logo)}" style="max-height: 70px; object-fit: contain; display: block;">`;
     }
     const companyName = (companyInfo && companyInfo.name) ? companyInfo.name : currentCompanyName;
     
@@ -1536,7 +1543,7 @@ function compilePrintHeaderAndFooter(headerTemplate, footerTemplate, companyInfo
     
     if (companyInfo && companyInfo[headerKey]) {
         headerHtml = `<div class="print-header-image-container" style="width: 100%; margin-bottom: 25px; text-align: center;">
-            <img src="/static/uploads/${companyInfo[headerKey]}" style="width: 100%; max-height: 120mm; object-fit: contain; display: block;">
+            <img src="${resolveUploadPath(companyInfo[headerKey])}" style="width: 100%; max-height: 120mm; object-fit: contain; display: block;">
         </div>`;
     } else if (headerTemplate && headerTemplate.trim() !== '') {
         headerHtml = compileTemplateString(headerTemplate, companyInfo);
@@ -1547,7 +1554,7 @@ function compilePrintHeaderAndFooter(headerTemplate, footerTemplate, companyInfo
         const companyAddress = (companyInfo && companyInfo.address) ? companyInfo.address : '';
         let logoTag = `☀️`;
         if (companyInfo && companyInfo.logo) {
-            logoTag = `<img src="/static/uploads/${companyInfo.logo}" style="max-height: 70px; object-fit: contain; display: block;">`;
+            logoTag = `<img src="${resolveUploadPath(companyInfo.logo)}" style="max-height: 70px; object-fit: contain; display: block;">`;
         }
         
         headerHtml = `<div class="print-custom-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0B2545; padding-bottom: 15px; margin-bottom: 20px; direction: rtl; font-family: 'Cairo', sans-serif;">
@@ -1570,7 +1577,7 @@ function compilePrintHeaderAndFooter(headerTemplate, footerTemplate, companyInfo
     
     if (companyInfo && companyInfo[footerKey]) {
         footerHtml = `<div class="print-footer-image-container" style="width: 100%; margin-top: 35px; text-align: center;">
-            <img src="/static/uploads/${companyInfo[footerKey]}" style="width: 100%; max-height: 50mm; object-fit: contain; display: block;">
+            <img src="${resolveUploadPath(companyInfo[footerKey])}" style="width: 100%; max-height: 50mm; object-fit: contain; display: block;">
         </div>`;
     } else if (footerTemplate && footerTemplate.trim() !== '') {
         footerHtml = compileTemplateString(footerTemplate, companyInfo);
@@ -2193,7 +2200,7 @@ async function uploadCompanyLogo() {
             // update sidebar immediately
             const sidebarLogo = document.querySelector('.sidebar-logo img');
             if (sidebarLogo) {
-                sidebarLogo.src = '/static/uploads/' + data.logo_path;
+                sidebarLogo.src = resolveUploadPath(data.logo_path);
             }
         } else {
             alert(data.error);
@@ -2209,7 +2216,7 @@ function applyCompanyLogo(filename) {
     if (placeholder && img) {
         if (filename) {
             placeholder.style.display = 'none';
-            img.src = `/static/uploads/${filename}`;
+            img.src = resolveUploadPath(filename);
             img.style.display = 'block';
         } else {
             placeholder.style.display = 'block';
@@ -2223,7 +2230,7 @@ function applyCompanyLogo(filename) {
     const sidebarHeader = document.querySelector('.sidebar-header');
     if (sidebarHeader) {
         if (filename) {
-            sidebarHeader.innerHTML = `<img src="/static/uploads/${filename}" style="max-height: 40px; object-fit: contain; margin-left: 10px;"> <span class="logo-text">${currentCompanyName}</span>`;
+            sidebarHeader.innerHTML = `<img src="${resolveUploadPath(filename)}" style="max-height: 40px; object-fit: contain; margin-left: 10px;"> <span class="logo-text">${currentCompanyName}</span>`;
         } else {
             sidebarHeader.innerHTML = `<span class="logo-icon">⚡☀️</span> <span class="logo-text">${currentCompanyName}</span>`;
         }
@@ -2236,7 +2243,7 @@ function applyPrintImagePreview(type, filename) {
     
     if (filename) {
         placeholder.style.display = 'none';
-        img.src = `/static/uploads/${filename}`;
+        img.src = resolveUploadPath(filename);
         img.style.display = 'block';
     } else {
         placeholder.style.display = 'block';
@@ -2512,7 +2519,7 @@ function showLocalNotification(title, body, tabTarget = 'dashboard') {
 
     const options = {
         body: body,
-        icon: '/static/uploads/' + (window.currentCompanyLogo || ''),
+        icon: resolveUploadPath(window.currentCompanyLogo || ''),
         badge: '/favicon.ico',
         dir: 'rtl',
         silent: false
