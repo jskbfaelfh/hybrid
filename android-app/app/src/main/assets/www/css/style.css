@@ -790,7 +790,12 @@ select.form-control option {
         margin: 0;
     }
 
-    body {
+    html, body {
+        display: block !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
         background: #fff !important;
         color: #000 !important;
         font-size: 11pt !important;
@@ -804,6 +809,9 @@ select.form-control option {
     
     #print-area-container {
         display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
     
     .modal-overlay {
