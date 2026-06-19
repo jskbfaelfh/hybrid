@@ -102,34 +102,35 @@ def get_customers():
     
     customers = []
     for r in rows:
+        r_dict = dict(r)
         c = {
-            'id': r['id'],
-            'name': r['name'],
-            'phone': r['phone'],
-            'address': r['address'],
-            'installation_date': r['installation_date'],
-            'sale_type': r['sale_type'],
-            'notes': r['notes'],
-            'system_status': r.get('system_status', 'قيد التنفيذ'),
-            'gps_location': r.get('gps_location', ''),
-            'installation_method': r.get('installation_method', ''),
-            'gps_link': r.get('gps_link', ''),
-            'created_at': r['created_at']
+            'id': r_dict['id'],
+            'name': r_dict['name'],
+            'phone': r_dict['phone'],
+            'address': r_dict['address'],
+            'installation_date': r_dict['installation_date'],
+            'sale_type': r_dict['sale_type'],
+            'notes': r_dict['notes'],
+            'system_status': r_dict.get('system_status', 'قيد التنفيذ'),
+            'gps_location': r_dict.get('gps_location', ''),
+            'installation_method': r_dict.get('installation_method', ''),
+            'gps_link': r_dict.get('gps_link', ''),
+            'created_at': r_dict['created_at']
         }
         
         # Reconstruct financials sub-dict if it exists
-        if r['total_price'] is not None:
+        if r_dict['total_price'] is not None:
             c['financials'] = {
-                'customer_id': r['id'],
-                'total_price': r['total_price'],
-                'down_payment': r['down_payment'],
-                'remaining_balance': r['remaining_balance'],
-                'total_installments': r['total_installments']
+                'customer_id': r_dict['id'],
+                'total_price': r_dict['total_price'],
+                'down_payment': r_dict['down_payment'],
+                'remaining_balance': r_dict['remaining_balance'],
+                'total_installments': r_dict['total_installments']
             }
         else:
             c['financials'] = None
             
-        c['components_count'] = r['comp_count']
+        c['components_count'] = r_dict['comp_count']
         customers.append(c)
         
     return jsonify(customers)
