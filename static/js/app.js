@@ -1614,8 +1614,10 @@ async function printContractA4() {
         printArea.innerHTML = `
             <div class="print-sheet-a4">
                 ${headerHtml}
-                <h1 class="print-title">عقد اتفاق وتوريد نظام طاقة شمسية</h1>
-                <div class="print-text-block">${contractText}</div>
+                <div class="print-body-content">
+                    <h1 class="print-title">عقد اتفاق وتوريد نظام طاقة شمسية</h1>
+                    <div class="print-text-block">${contractText}</div>
+                </div>
                 <div class="print-signatures">
                     <div class="print-signature-box">الطرف الأول (الشركة المجهزة)</div>
                     <div class="print-signature-box">الطرف الثاني (العميل المتعاقد)</div>
@@ -1642,8 +1644,10 @@ async function printWarrantyA4() {
         printArea.innerHTML = `
             <div class="print-sheet-a4">
                 ${headerHtml}
-                <h1 class="print-title">شهادة الضمان والجودة للأجهزة والأنظمة</h1>
-                <div class="print-text-block">${data.compiled_warranty}</div>
+                <div class="print-body-content">
+                    <h1 class="print-title">شهادة الضمان والجودة للأجهزة والأنظمة</h1>
+                    <div class="print-text-block">${data.compiled_warranty}</div>
+                </div>
                 <div class="print-signatures">
                     <div class="print-signature-box">ختم وتوقيع شركة ${data.company_info.name}</div>
                     <div class="print-signature-box">توقيع العميل المستلم</div>
@@ -1684,32 +1688,34 @@ async function printReceiptA4(instId) {
         printArea.innerHTML = `
             <div class="print-sheet-a4">
                 ${headerHtml}
-                <h1 class="print-title" style="margin-bottom: 25px;">وصل قبض مالي للأقساط الشهرية</h1>
-                
-                <table class="print-table" style="margin-bottom: 30px;">
-                    <tr>
-                        <td style="width: 25%; background:#f2f2f2; font-weight:bold;">وصل قبض رقم:</td>
-                        <td style="width: 25%;">REC-${inst.id}</td>
-                        <td style="width: 25%; background:#f2f2f2; font-weight:bold;">تاريخ القبض:</td>
-                        <td style="width: 25%; font-weight:bold;">${inst.paid_date}</td>
-                    </tr>
-                    <tr>
-                        <td style="background:#f2f2f2; font-weight:bold;">استلمنا من العميل:</td>
-                        <td colspan="3" style="font-weight:bold; font-size: 12pt;">${cust.name} (رقم العميل: ${cust.id})</td>
-                    </tr>
-                    <tr>
-                        <td style="background:#f2f2f2; font-weight:bold;">قيمة الدفعة المقبوضة:</td>
-                        <td style="font-weight:bold; color:green; font-size:13pt;">${formatCurrency(inst.amount)}</td>
-                        <td style="background:#f2f2f2; font-weight:bold;">وذلك تسديداً لـ:</td>
-                        <td style="font-weight:bold;">القسط رقم #${inst.installment_number}</td>
-                    </tr>
-                    <tr>
-                        <td style="background:#f2f2f2; font-weight:bold;">الدفعة الأولى (المقدمة):</td>
-                        <td style="font-weight:bold; color:#0284c7;">${formatCurrency(cust.financials.down_payment)}</td>
-                        <td style="background:#f2f2f2; font-weight:bold;">المجموع المالي للتعاقد:</td>
-                        <td style="font-weight:bold;">${formatCurrency(cust.financials.total_price)}</td>
-                    </tr>
-                </table>
+                <div class="print-body-content">
+                    <h1 class="print-title" style="margin-bottom: 25px;">وصل قبض مالي للأقساط الشهرية</h1>
+                    
+                    <table class="print-table" style="margin-bottom: 30px;">
+                        <tr>
+                            <td style="width: 25%; background:#f2f2f2; font-weight:bold;">وصل قبض رقم:</td>
+                            <td style="width: 25%;">REC-${inst.id}</td>
+                            <td style="width: 25%; background:#f2f2f2; font-weight:bold;">تاريخ القبض:</td>
+                            <td style="width: 25%; font-weight:bold;">${inst.paid_date}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2; font-weight:bold;">استلمنا من العميل:</td>
+                            <td colspan="3" style="font-weight:bold; font-size: 12pt;">${cust.name} (رقم العميل: ${cust.id})</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2; font-weight:bold;">قيمة الدفعة المقبوضة:</td>
+                            <td style="font-weight:bold; color:green; font-size:13pt;">${formatCurrency(inst.amount)}</td>
+                            <td style="background:#f2f2f2; font-weight:bold;">وذلك تسديداً لـ:</td>
+                            <td style="font-weight:bold;">القسط رقم #${inst.installment_number}</td>
+                        </tr>
+                        <tr>
+                            <td style="background:#f2f2f2; font-weight:bold;">الدفعة الأولى (المقدمة):</td>
+                            <td style="font-weight:bold; color:#0284c7;">${formatCurrency(cust.financials.down_payment)}</td>
+                            <td style="background:#f2f2f2; font-weight:bold;">المجموع المالي للتعاقد:</td>
+                            <td style="font-weight:bold;">${formatCurrency(cust.financials.total_price)}</td>
+                        </tr>
+                    </table>
+                </div>
 
                 <div class="print-signatures" style="margin-top: 40px;">
                     <div class="print-signature-box" style="border:none;">المحاسب المسؤول لـ ${company.company_name || currentCompanyName}: ________________</div>
@@ -2779,40 +2785,42 @@ async function printFirstReceiptA4() {
         const { headerHtml, footerHtml } = compilePrintHeaderAndFooter(data.print_header_template, data.print_footer_template, data.company_info, 'receipt');
         const printArea = document.getElementById('print-area-container');
         printArea.innerHTML = `
-            <div class="print-sheet-a4" style="min-height: 150mm; border: 2px solid #000; padding: 15mm; margin-top: 20px;">
+            <div class="print-sheet-a4">
                 ${headerHtml}
-                <h1 class="print-title">وصل قبض مالي (الدفعة المقدمة)</h1>
-                <table class="print-table" style="margin-top: 30px; margin-bottom: 30px;">
-                    <tr>
-                        <td style="width: 25%; background: #f2f2f2; font-weight:bold;">رقم المعاملة/العميل:</td>
-                        <td style="width: 25%;">${data.customer_id}</td>
-                        <td style="width: 25%; background: #f2f2f2; font-weight:bold;">تاريخ القبض والتشغيل:</td>
-                        <td style="width: 25%;">${data.financials.installation_date || '-'}</td>
-                    </tr>
-                    <tr>
-                        <td style="background: #f2f2f2; font-weight:bold;">استلمنا من السيد/السيدة:</td>
-                        <td colspan="3" style="font-weight:bold; font-size: 1.1rem; color: #000;">${data.customer_name}</td>
-                    </tr>
-                    <tr>
-                        <td style="background: #f2f2f2; font-weight:bold;">مبلغ الدفعة المقبوضة:</td>
-                        <td colspan="3" style="font-weight:bold; font-size: 1.2rem; color: green; background: rgba(16, 185, 129, 0.05);">${formatCurrency(data.financials.down_payment)}</td>
-                    </tr>
-                    <tr>
-                        <td style="background: #f2f2f2; font-weight:bold;">سعر الاتفاق الكلي:</td>
-                        <td style="font-weight:bold;">${formatCurrency(data.financials.total_price)}</td>
-                        <td style="background: #f2f2f2; font-weight:bold;">المتبقي بذمة العميل:</td>
-                        <td style="font-weight:bold; color: red;">${formatCurrency(data.financials.remaining_balance)}</td>
-                    </tr>
-                    <tr>
-                        <td style="background: #f2f2f2; font-weight:bold;">طريقة بيع المنظومة:</td>
-                        <td>${data.sale_type === 'Installment' ? 'أقساط شهرية' : 'نقد كاش كامل'}</td>
-                        <td style="background: #f2f2f2; font-weight:bold;">أشهر/خطة السداد:</td>
-                        <td>${data.sale_type === 'Installment' ? `${data.financials.total_installments} أقساط شهرية` : '—'}</td>
-                    </tr>
-                </table>
-                <div style="font-size: 0.95rem; line-height: 1.8; margin-bottom: 50px; background: rgba(0,0,0,0.01); padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
-                    <strong>تفاصيل وملاحظات الوصل:</strong><br>
-                    تم قبض مبلغ الدفعة الأولى المقدمة المتفق عليها كدفعة تشغيل وتجهيز للمواد المذكورة في العقد الموقع بين الطرفين. يعتبر هذا الوصل إقراراً رسمياً باستلام المبلغ أعلاه.
+                <div class="print-body-content">
+                    <h1 class="print-title">وصل قبض مالي (الدفعة المقدمة)</h1>
+                    <table class="print-table" style="margin-top: 30px; margin-bottom: 30px;">
+                        <tr>
+                            <td style="width: 25%; background: #f2f2f2; font-weight:bold;">رقم المعاملة/العميل:</td>
+                            <td style="width: 25%;">${data.customer_id}</td>
+                            <td style="width: 25%; background: #f2f2f2; font-weight:bold;">تاريخ القبض والتشغيل:</td>
+                            <td style="width: 25%;">${data.financials.installation_date || '-'}</td>
+                        </tr>
+                        <tr>
+                            <td style="background: #f2f2f2; font-weight:bold;">استلمنا من السيد/السيدة:</td>
+                            <td colspan="3" style="font-weight:bold; font-size: 1.1rem; color: #000;">${data.customer_name}</td>
+                        </tr>
+                        <tr>
+                            <td style="background: #f2f2f2; font-weight:bold;">مبلغ الدفعة المقبوضة:</td>
+                            <td colspan="3" style="font-weight:bold; font-size: 1.2rem; color: green; background: rgba(16, 185, 129, 0.05);">${formatCurrency(data.financials.down_payment)}</td>
+                        </tr>
+                        <tr>
+                            <td style="background: #f2f2f2; font-weight:bold;">سعر الاتفاق الكلي:</td>
+                            <td style="font-weight:bold;">${formatCurrency(data.financials.total_price)}</td>
+                            <td style="background: #f2f2f2; font-weight:bold;">المتبقي بذمة العميل:</td>
+                            <td style="font-weight:bold; color: red;">${formatCurrency(data.financials.remaining_balance)}</td>
+                        </tr>
+                        <tr>
+                            <td style="background: #f2f2f2; font-weight:bold;">طريقة بيع المنظومة:</td>
+                            <td>${data.sale_type === 'Installment' ? 'أقساط شهرية' : 'نقد كاش كامل'}</td>
+                            <td style="background: #f2f2f2; font-weight:bold;">أشهر/خطة السداد:</td>
+                            <td>${data.sale_type === 'Installment' ? `${data.financials.total_installments} أقساط شهرية` : '—'}</td>
+                        </tr>
+                    </table>
+                    <div style="font-size: 0.95rem; line-height: 1.8; margin-bottom: 50px; background: rgba(0,0,0,0.01); padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+                        <strong>تفاصيل وملاحظات الوصل:</strong><br>
+                        تم قبض مبلغ الدفعة الأولى المقدمة المتفق عليها كدفعة تشغيل وتجهيز للمواد المذكورة في العقد الموقع بين الطرفين. يعتبر هذا الوصل إقراراً رسمياً باستلام المبلغ أعلاه.
+                    </div>
                 </div>
                 <div class="print-signatures" style="margin-top: 40px;">
                     <div class="print-signature-box" style="border:none;">المستلم / أمين الصندوق: ________________</div>
