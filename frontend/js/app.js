@@ -1607,11 +1607,15 @@ async function printContractA4() {
         const { headerHtml, footerHtml } = compilePrintHeaderAndFooter(data.print_header_template, data.print_footer_template, data.company_info, 'contract');
         
         const printArea = document.getElementById('print-area-container');
+        let contractText = data.compiled_contract;
+        // Strip redundant raw text signatures line to use styled boxes
+        contractText = contractText.replace(/توقيع الطرف الأول \(الشركة\):[\s\S]*توقيع الطرف الثاني \(العميل\):/g, '');
+        
         printArea.innerHTML = `
             <div class="print-sheet-a4">
                 ${headerHtml}
                 <h1 class="print-title">عقد اتفاق وتوريد نظام طاقة شمسية</h1>
-                <div class="print-text-block">${data.compiled_contract}</div>
+                <div class="print-text-block">${contractText}</div>
                 <div class="print-signatures">
                     <div class="print-signature-box">الطرف الأول (الشركة المجهزة)</div>
                     <div class="print-signature-box">الطرف الثاني (العميل المتعاقد)</div>
@@ -1678,7 +1682,7 @@ async function printReceiptA4(instId) {
         
         const printArea = document.getElementById('print-area-container');
         printArea.innerHTML = `
-            <div class="print-sheet-a4" style="min-height: 150mm; border: 2px solid #000; padding: 15mm; margin-top: 20px;">
+            <div class="print-sheet-a4">
                 ${headerHtml}
                 <h1 class="print-title" style="margin-bottom: 25px;">وصل قبض مالي للأقساط الشهرية</h1>
                 

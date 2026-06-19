@@ -1327,6 +1327,8 @@ def compile_documents(id):
     # Fetch first installment amount
     first_inst = query_db('SELECT amount FROM installments WHERE customer_id = ? ORDER BY installment_number ASC LIMIT 1', (id,), one=True)
     inst_val = first_inst['amount'] if first_inst else 0.0
+    if inst_val == 0.0 and f['total_installments'] > 0:
+        inst_val = f['remaining_balance'] / f['total_installments']
     
     # Variables for replacement
     vars_map = {
