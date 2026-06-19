@@ -27,9 +27,9 @@ window.fetch = async function(...args) {
                 const newOptions = { ...options };
                 newOptions.headers = { ...newOptions.headers, 'X-App-Token': 'hybrid_mobile_secret_2026' };
                 
-                // Very short timeout for fetch to fail fast if offline
+                // Increased timeout for fetch to prevent 'not found in offline DB' on cold starts/slow networks
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
                 newOptions.signal = controller.signal;
                 
                 const res = await originalFetch(fullUrl, newOptions);
@@ -68,9 +68,9 @@ window.fetch = async function(...args) {
                 const newOptions = { ...options };
                 newOptions.headers = { ...newOptions.headers, 'X-App-Token': 'hybrid_mobile_secret_2026' };
                 
-                // 5 seconds timeout for mutations
+                // Increased timeout for mutations to allow database actions on remote Turso
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
                 newOptions.signal = controller.signal;
                 
                 const res = await originalFetch(fullUrl, newOptions);
