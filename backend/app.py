@@ -103,15 +103,13 @@ def is_authenticated():
 # ----------------- UI ROUTE -----------------
 @app.route('/')
 def index():
-    conn = get_db_connection()
-    company_name_row = conn.execute("SELECT value FROM settings WHERE key = 'company_name'").fetchone()
-    company_logo_row = conn.execute("SELECT value FROM settings WHERE key = 'company_logo'").fetchone()
-    engineer_name_row = conn.execute("SELECT value FROM settings WHERE key = 'engineer_name'").fetchone()
-    conn.close()
+    db = get_db()
+    cursor = db.execute("SELECT key, value FROM settings WHERE key IN ('company_name', 'company_logo', 'engineer_name')")
+    settings = {row['key']: row['value'] for row in cursor.fetchall()}
     
-    company_name = company_name_row['value'] if company_name_row else 'هايبرد إينرجي للطاقة الشمسية'
-    company_logo = company_logo_row['value'] if company_logo_row else ''
-    engineer_name = engineer_name_row['value'] if engineer_name_row else 'أحمد علي'
+    company_name = settings.get('company_name', 'هايبرد إينرجي للطاقة الشمسية')
+    company_logo = settings.get('company_logo', '')
+    engineer_name = settings.get('engineer_name', 'أحمد علي')
     
     if not is_authenticated():
         return render_template('login.html', company_name=company_name, company_logo=company_logo)
@@ -1198,39 +1196,37 @@ def get_dashboard_stats():
     if not is_authenticated():
         return jsonify({'error': 'Unauthorized'}), 401
         
-    # 1. Total Sales (Installment Contract prices + Cash Customer Contract prices)
-    sales = query_db('SELECT SUM(total_price) as sum FROM financial_status', one=True)
-    total_sales = sales['sum'] if sales['sum'] else 0.0
+    db = get_db()
     
-    # 2. Total Paid (All down payments + paid installments)
-    down_payments = query_db('SELECT SUM(down_payment) as sum FROM financial_status', one=True)
-    total_down_payments = down_payments['sum'] if down_payments['sum'] else 0.0
+    # 1. Update overdue installments in database if due_date is in the past
+    import datetime
+    today_str = datetime.date.today().strftime('%Y-%m-%d')
+    db.execute("UPDATE installments SET status = 'Overdue' WHERE status = 'Unpaid' AND due_date < ?", (today_str,))
+    db.commit()
     
-    paid_installments = query_db("SELECT SUM(amount) as sum FROM installments WHERE status = 'Paid'", one=True)
-    total_paid_installments = paid_installments['sum'] if paid_installments['sum'] else 0.0
+    # 2. Run consolidated query to get all general metrics in a single database round-trip
+    stats_row = query_db('''
+        SELECT 
+          (SELECT SUM(total_price) FROM financial_status) as total_sales,
+          (SELECT SUM(down_payment) FROM financial_status) as total_down_payments,
+          (SELECT SUM(amount) FROM installments WHERE status = 'Paid') as total_paid_installments,
+          (SELECT SUM(amount) FROM company_expenses) as total_expenses,
+          (SELECT SUM(cost_price * quantity) FROM customer_components) as total_cogs
+    ''', one=True)
+    
+    total_sales = stats_row['total_sales'] if stats_row['total_sales'] else 0.0
+    total_down_payments = stats_row['total_down_payments'] if stats_row['total_down_payments'] else 0.0
+    total_paid_installments = stats_row['total_paid_installments'] if stats_row['total_paid_installments'] else 0.0
+    general_expenses = stats_row['total_expenses'] if stats_row['total_expenses'] else 0.0
+    total_cogs = stats_row['total_cogs'] if stats_row['total_cogs'] else 0.0
     
     total_collections = total_down_payments + total_paid_installments
-    
-    # 3. Customer Debts (Total sales - collections)
     total_debts = max(0.0, total_sales - total_collections)
-    
-    # 4. Total Expenses (General Expenses)
-    expenses = query_db('SELECT SUM(amount) as sum FROM company_expenses', one=True)
-    general_expenses = expenses['sum'] if expenses['sum'] else 0.0
-    
-    # 5. Total Cost of Goods Sold (Sold Parts Cost)
-    cogs = query_db('SELECT SUM(cost_price * quantity) as sum FROM customer_components', one=True)
-    total_cogs = cogs['sum'] if cogs['sum'] else 0.0
-    
-    # Combined Expenses
     total_expenses = general_expenses + total_cogs
-    
-    # 6. Profits
     net_profit = total_collections - total_expenses  # Real Cash Flow profit
     net_profit_accounting = total_sales - total_expenses  # Book/Accounting profit
     
-    # 6. Unpaid/Overdue installments (Filtered to current month only)
-    import datetime
+    # 3. Fetch unpaid installments (Filtered to current month only)
     current_month_prefix = datetime.date.today().strftime('%Y-%m') + '%'
     unpaid_list = query_db('''
         SELECT i.*, c.name as customer_name, c.phone as customer_phone
@@ -1241,16 +1237,7 @@ def get_dashboard_stats():
         LIMIT 20
     ''', (current_month_prefix,))
     
-    # Check for overdue installments in database and update their status to Overdue if due_date is in the past
-    import datetime
-    today_str = datetime.date.today().strftime('%Y-%m-%d')
-    
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("UPDATE installments SET status = 'Overdue' WHERE status = 'Unpaid' AND due_date < ?", (today_str,))
-    conn.commit()
-    conn.close()
-    
+    # 4. Fetch overdue installments
     overdue_list = query_db('''
         SELECT i.*, c.name as customer_name, c.phone as customer_phone
         FROM installments i
@@ -1259,8 +1246,7 @@ def get_dashboard_stats():
         ORDER BY i.due_date ASC
     ''')
     
-    # 7. Chart Data (Monthly Sales vs Expenses)
-    # Build chart data by compiling lists of sums per month
+    # 5. Chart Data (Monthly Sales vs Expenses)
     chart_sales_rows = query_db('''
         SELECT strftime('%Y-%m', installation_date) as month, SUM(f.total_price) as total
         FROM customers c
