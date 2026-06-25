@@ -891,12 +891,26 @@ def delete_inventory_item(item_id):
     return jsonify({'success': True, 'message': 'تم حذف المادة من المخزن'})
 
 # Helper to save file or fallback to base64 Data URI on read-only environments
-def save_uploaded_file(file, filename, upload_folder):
+def save_uploaded_file(file, filename, upload_folder, force_base64=False):
     import base64
     file.seek(0)
     file_bytes = file.read()
     file.seek(0)
     
+    if force_base64:
+        file_ext = os.path.splitext(filename)[1].lower()
+        mime_type = "application/octet-stream"
+        if file_ext in [".png", ".jpg", ".jpeg", ".gif", ".webp"]:
+            mime_type = f"image/{file_ext[1:] if file_ext != '.jpg' else 'jpeg'}"
+        elif file_ext in [".mp4", ".webm"]:
+            mime_type = f"video/{file_ext[1:]}"
+        elif file_ext == ".pdf":
+            mime_type = "application/pdf"
+            
+        b64_data = base64.b64encode(file_bytes).decode("utf-8")
+        data_uri = f"data:{mime_type};base64,{b64_data}"
+        return data_uri, False
+        
     file_path = os.path.join(upload_folder, filename)
     try:
         file.save(file_path)
@@ -1066,7 +1080,7 @@ def upload_logo():
     unique_filename = f"logo_{int(time.time())}{file_ext}"
     
     # Save file or convert to base64
-    stored_val, saved_local = save_uploaded_file(file, unique_filename, app.config['UPLOAD_FOLDER'])
+    stored_val, saved_local = save_uploaded_file(file, unique_filename, app.config['UPLOAD_FOLDER'], force_base64=True)
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -1115,7 +1129,7 @@ def upload_print_image(type_name):
     unique_filename = f"print_{type_name}_{int(time.time())}{file_ext}"
     
     # Save file or convert to base64
-    stored_val, saved_local = save_uploaded_file(file, unique_filename, app.config['UPLOAD_FOLDER'])
+    stored_val, saved_local = save_uploaded_file(file, unique_filename, app.config['UPLOAD_FOLDER'], force_base64=True)
     
     conn = get_db_connection()
     cursor = conn.cursor()
