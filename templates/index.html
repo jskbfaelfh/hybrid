@@ -9,12 +9,23 @@
     <!-- Chart.js for beautiful interactive dashboards -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="/static/css/style.css?v=6">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0d1117">
     <script>
         // Apply theme immediately before rendering to prevent flash of unstyled content
         (function() {
             const savedTheme = localStorage.getItem('theme') || 'dark';
             document.documentElement.setAttribute('data-theme', savedTheme);
         })();
+        
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('Service Worker registered:', reg.scope))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
     </script>
 </head>
 <body>

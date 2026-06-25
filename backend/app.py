@@ -67,6 +67,14 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def favicon():
     return '', 204
 
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory('static', 'manifest.json', mimetype='application/json')
+
+@app.route('/service-worker.js')
+def service_worker():
+    return send_from_directory('static', 'service-worker.js', mimetype='application/javascript')
+
 # Initialize DB on startup
 with app.app_context():
     init_db()
