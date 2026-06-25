@@ -1347,12 +1347,20 @@ def compile_documents(id):
     }
     
     # Compile
-    contract_raw = settings.get('contract_template', '')
-    warranty_raw = settings.get('warranty_template', '')
+    sale_type = c.get('sale_type', 'Cash')
+    if sale_type == 'Cash':
+        contract_raw = settings.get('contract_template_cash', settings.get('contract_template', ''))
+        warranty_raw = settings.get('warranty_template_cash', settings.get('warranty_template', ''))
+        receipt_note_raw = settings.get('receipt_template_cash', 'تم قبض مبلغ العمل بالكامل نقداً عند التوقيع/التشغيل. يعتبر هذا الوصل إقراراً رسمياً باستلام المبلغ أعلاه.')
+    else:
+        contract_raw = settings.get('contract_template_installment', settings.get('contract_template', ''))
+        warranty_raw = settings.get('warranty_template_installment', settings.get('warranty_template', ''))
+        receipt_note_raw = settings.get('receipt_template_installment', 'تم قبض مبلغ الدفعة الأولى المقدمة المتفق عليها كدفعة تشغيل وتجهيز للمواد المذكورة في العقد الموقع بين الطرفين. يعتبر هذا الوصل إقراراً رسمياً باستلام المبلغ أعلاه.')
     
     for k, v in vars_map.items():
         contract_raw = contract_raw.replace(k, str(v))
         warranty_raw = warranty_raw.replace(k, str(v))
+        receipt_note_raw = receipt_note_raw.replace(k, str(v))
         
     return jsonify({
         'customer_id': id,
@@ -1361,6 +1369,7 @@ def compile_documents(id):
         'sale_type': c['sale_type'],
         'compiled_contract': contract_raw,
         'compiled_warranty': warranty_raw,
+        'compiled_receipt_note': receipt_note_raw,
         'print_header_template': settings.get('print_header_template', ''),
         'print_footer_template': settings.get('print_footer_template', ''),
         'components': [dict(cp) for cp in comps],

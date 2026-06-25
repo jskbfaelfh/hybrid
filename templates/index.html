@@ -424,16 +424,43 @@
                             <code>{اسم_العميل}</code>, <code>{هاتف_العميل}</code>, <code>{عنوان_العميل}</code>, <code>{تاريخ_التنصيب}</code>, <code>{المبلغ_الإجمالي}</code>, <code>{الدفعة_الأولى}</code>, <code>{المبلغ_المتبقي}</code>, <code>{عدد_الأقساط}</code>, <code>{قيمة_القسط}</code>, <code>{طريقة_التعاقد}</code>, <code>{تفاصيل_ضمان_القطع}</code>, <code>{رقم_العميل}</code>.
                         </p>
                         
-                        <div class="form-group">
-                            <label class="form-label">بنود عقد الشراء والتركيب العام</label>
-                            <textarea id="sett-contract-template" class="form-control" rows="8" style="resize: vertical; font-family: monospace; line-height: 1.6;"></textarea>
+                        <div class="settings-templates-container">
+                            <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; margin-bottom: 20px;">
+                                <h3 style="font-size: 1rem; color: var(--neon-blue); margin-bottom: 15px;">💵 أولاً: قوالب المعاملات النقدية (Cash)</h3>
+                                <div class="form-group">
+                                    <label class="form-label">عقد الشراء والتركيب (نقدي)</label>
+                                    <textarea id="sett-contract-template-cash" class="form-control" rows="6" style="resize: vertical; font-family: monospace; line-height: 1.6;"></textarea>
+                                </div>
+                                <br>
+                                <div class="form-group">
+                                    <label class="form-label">شهادة الضمان والجودة (نقدي)</label>
+                                    <textarea id="sett-warranty-template-cash" class="form-control" rows="6" style="resize: vertical; font-family: monospace; line-height: 1.6;"></textarea>
+                                </div>
+                                <br>
+                                <div class="form-group">
+                                    <label class="form-label">ملاحظات وتفاصيل وصل القبض (نقدي)</label>
+                                    <textarea id="sett-receipt-template-cash" class="form-control" rows="3" style="resize: vertical; font-family: monospace; line-height: 1.6;"></textarea>
+                                </div>
+                            </div>
+                            
+                            <div style="padding-top: 10px; margin-bottom: 20px;">
+                                <h3 style="font-size: 1rem; color: var(--neon-blue); margin-bottom: 15px;">💳 ثانياً: قوالب معاملات الأقساط (Installments)</h3>
+                                <div class="form-group">
+                                    <label class="form-label">عقد الشراء والتركيب (أقساط)</label>
+                                    <textarea id="sett-contract-template-installment" class="form-control" rows="6" style="resize: vertical; font-family: monospace; line-height: 1.6;"></textarea>
+                                </div>
+                                <br>
+                                <div class="form-group">
+                                    <label class="form-label">شهادة الضمان والجودة (أقساط)</label>
+                                    <textarea id="sett-warranty-template-installment" class="form-control" rows="6" style="resize: vertical; font-family: monospace; line-height: 1.6;"></textarea>
+                                </div>
+                                <br>
+                                <div class="form-group">
+                                    <label class="form-label">ملاحظات وتفاصيل وصل الدفعة الأولى (أقساط)</label>
+                                    <textarea id="sett-receipt-template-installment" class="form-control" rows="3" style="resize: vertical; font-family: monospace; line-height: 1.6;"></textarea>
+                                </div>
+                            </div>
                         </div>
-                        <br>
-                        <div class="form-group">
-                            <label class="form-label">بنود شهادة الضمان والجودة للأجهزة والأنظمة</label>
-                            <textarea id="sett-warranty-template" class="form-control" rows="8" style="resize: vertical; font-family: monospace; line-height: 1.6;"></textarea>
-                        </div>
-                        <br>
                         <button class="btn btn-primary" onclick="saveTemplatesSettings()">💾 حفظ قوالب المطبوعات والعقود</button>
                     </div>
                 </div>
@@ -766,18 +793,18 @@
                         <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
                             <button class="btn btn-secondary" onclick="printContractA4()" style="padding: 25px; flex-direction: column; gap: 10px; border-radius: 15px; border-color: rgba(255,255,255,0.07);">
                                 <span style="font-size: 2.2rem;">📝</span>
-                                <span style="font-weight: bold; font-size: 1rem;">عقد الشراء والتركيب</span>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">تحرير بنوده بالكامل من الإعدادات</span>
+                                <span id="print-contract-btn-text" style="font-weight: bold; font-size: 1rem;">عقد الشراء والتركيب</span>
+                                <span id="print-contract-btn-sub" style="font-size: 0.75rem; color: var(--text-muted);">تحرير بنوده بالكامل من الإعدادات</span>
                             </button>
                             <button class="btn btn-secondary" onclick="printWarrantyA4()" style="padding: 25px; flex-direction: column; gap: 10px; border-radius: 15px; border-color: rgba(255,255,255,0.07);">
                                 <span style="font-size: 2.2rem;">🛡️</span>
-                                <span style="font-weight: bold; font-size: 1rem;">شهادة الجودة والضمان</span>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">تعرض ضمان الأجهزة والقطع للعميل</span>
+                                <span id="print-warranty-btn-text" style="font-weight: bold; font-size: 1rem;">شهادة الجودة والضمان</span>
+                                <span id="print-warranty-btn-sub" style="font-size: 0.75rem; color: var(--text-muted);">تعرض ضمان الأجهزة والقطع للعميل</span>
                             </button>
                             <button class="btn btn-secondary" onclick="printFirstReceiptA4()" style="padding: 25px; flex-direction: column; gap: 10px; border-radius: 15px; border-color: rgba(255,255,255,0.07);">
                                 <span style="font-size: 2.2rem;">💵</span>
-                                <span style="font-weight: bold; font-size: 1rem;">وصل الدفعة الأولى (المقدمة)</span>
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">يوضح السعر الكلي، المقبوض، والمتبقي</span>
+                                <span id="print-receipt-btn-text" style="font-weight: bold; font-size: 1rem;">وصل الدفعة الأولى (المقدمة)</span>
+                                <span id="print-receipt-btn-sub" style="font-size: 0.75rem; color: var(--text-muted);">يوضح السعر الكلي، المقبوض، والمتبقي</span>
                             </button>
                         </div>
                     </div>
@@ -1200,6 +1227,35 @@
     </div>
 
     <!-- ============================================== -->
+    <!-- MODAL: CONTRACT NOTES OPTIONAL PROMPT -->
+    <!-- ============================================== -->
+    <div class="modal-overlay" id="modalContractNotesPrompt" style="z-index: 2100;">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3 class="modal-title">📄 ملاحظات طباعة العقد</h3>
+                <button class="modal-close" onclick="closeModal('modalContractNotesPrompt')">&times;</button>
+            </div>
+            <div class="modal-body" style="padding-top: 15px;">
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6;">
+                    هل ترغب في إضافة ملاحظات أو شروط إضافية تظهر في هذا العقد قبل طباعته؟
+                </p>
+                <div class="form-group" id="contract-notes-input-wrapper" style="display: none; margin-bottom: 15px;">
+                    <label class="form-label" style="font-size: 0.85rem; color: var(--neon-blue);">اكتب الملاحظات هنا:</label>
+                    <textarea id="contract-print-custom-notes" class="form-control" rows="4" placeholder="اكتب ملاحظات إضافية تظهر أسفل بنود العقد..." style="resize: vertical; font-size: 0.85rem; padding: 10px;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; direction: ltr;">
+                <!-- Phase 1: Selection Buttons -->
+                <button class="btn btn-secondary" id="btn-contract-no-notes" onclick="printContractDirectly(false)">متابعة بدون ملاحظات</button>
+                <button class="btn btn-primary" id="btn-contract-show-notes-field" onclick="showContractNotesField()">إضافة ملاحظات</button>
+                
+                <!-- Phase 2: Print Button (Hidden by default) -->
+                <button class="btn btn-success" id="btn-contract-print-with-notes" onclick="printContractDirectly(true)" style="display: none;">🖨️ طباعة العقد الآن</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
     <!-- HIDDEN A4 SHEET SPECIFIC CONTAINERS FOR PRINT -->
     <!-- ============================================== -->
     <div id="print-area-container">
@@ -1208,6 +1264,6 @@
 
     <!-- Main Controller Script -->
     <script src="/static/js/offline-bridge.js?v=2"></script>
-    <script src="/static/js/app.js?v=7"></script>
+    <script src="/static/js/app.js?v=8"></script>
 </body>
 </html>

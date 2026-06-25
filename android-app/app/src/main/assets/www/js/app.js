@@ -889,6 +889,30 @@ async function loadProfileData() {
             renderStandaloneInstallments(cust.installments);
         }
         
+        // Update printing buttons depending on sale_type
+        const printContractText = document.getElementById('print-contract-btn-text');
+        const printContractSub = document.getElementById('print-contract-btn-sub');
+        const printWarrantyText = document.getElementById('print-warranty-btn-text');
+        const printWarrantySub = document.getElementById('print-warranty-btn-sub');
+        const printReceiptText = document.getElementById('print-receipt-btn-text');
+        const printReceiptSub = document.getElementById('print-receipt-btn-sub');
+        
+        if (cust.sale_type === 'Cash') {
+            if (printContractText) printContractText.innerText = 'عقد الشراء والتركيب (نقدي)';
+            if (printContractSub) printContractSub.innerText = 'طباعة عقد البيع والتجهيز النقدي بالكامل';
+            if (printWarrantyText) printWarrantyText.innerText = 'شهادة الجودة والضمان (نقدي)';
+            if (printWarrantySub) printWarrantySub.innerText = 'وثيقة الضمان لنظام الدفع النقدي';
+            if (printReceiptText) printReceiptText.innerText = 'وصل القبض المالي (نقدي)';
+            if (printReceiptSub) printReceiptSub.innerText = 'طباعة وصل قبض المبلغ الكلي نقداً';
+        } else {
+            if (printContractText) printContractText.innerText = 'عقد الشراء والتركيب (أقساط)';
+            if (printContractSub) printContractSub.innerText = 'طباعة عقد البيع والتجهيز بالأقساط الشهرية';
+            if (printWarrantyText) printWarrantyText.innerText = 'شهادة الجودة والضمان (أقساط)';
+            if (printWarrantySub) printWarrantySub.innerText = 'وثيقة الضمان وشروط التزام الأقساط';
+            if (printReceiptText) printReceiptText.innerText = 'وصل الدفعة الأولى (المقدمة)';
+            if (printReceiptSub) printReceiptSub.innerText = 'يوضح السعر الكلي، المقبوض، والمتبقي والأقساط';
+        }
+        
     } catch (err) {
         console.error("Error loading customer profile data", err);
     }
@@ -1598,11 +1622,54 @@ function compilePrintHeaderAndFooter(headerTemplate, footerTemplate, companyInfo
     return { headerHtml, footerHtml };
 }
 
-async function printContractA4() {
+function printContractA4() {
+    // Reset modal UI elements
+    const wrapper = document.getElementById('contract-notes-input-wrapper');
+    const textarea = document.getElementById('contract-print-custom-notes');
+    const btnNoNotes = document.getElementById('btn-contract-no-notes');
+    const btnShowNotes = document.getElementById('btn-contract-show-notes-field');
+    const btnPrint = document.getElementById('btn-contract-print-with-notes');
+
+    if (wrapper) wrapper.style.display = 'none';
+    if (textarea) textarea.value = '';
+    if (btnNoNotes) btnNoNotes.style.display = 'inline-block';
+    if (btnShowNotes) btnShowNotes.style.display = 'inline-block';
+    if (btnPrint) btnPrint.style.display = 'none';
+
+    openModal('modalContractNotesPrompt');
+}
+
+function showContractNotesField() {
+    const wrapper = document.getElementById('contract-notes-input-wrapper');
+    const btnNoNotes = document.getElementById('btn-contract-no-notes');
+    const btnShowNotes = document.getElementById('btn-contract-show-notes-field');
+    const btnPrint = document.getElementById('btn-contract-print-with-notes');
+
+    if (wrapper) wrapper.style.display = 'block';
+    if (btnNoNotes) btnNoNotes.style.display = 'none';
+    if (btnShowNotes) btnShowNotes.style.display = 'none';
+    if (btnPrint) btnPrint.style.display = 'inline-block';
+}
+
+async function printContractDirectly(hasNotes) {
+    closeModal('modalContractNotesPrompt');
     try {
         const res = await fetch(`/api/customers/${currentCustomerId}/compile-docs`);
         if (!res.ok) return;
         const data = await res.json();
+        
+        let notesHtml = '';
+        if (hasNotes) {
+            const userNotes = document.getElementById('contract-print-custom-notes').value;
+            if (userNotes && userNotes.trim() !== '') {
+                notesHtml = `
+                    <div class="print-contract-notes" style="margin-top: 20px; padding: 15px; border: 1px dashed #777; border-radius: 8px; font-size: 10pt; direction: rtl; font-family: 'Cairo', sans-serif; background: rgba(0,0,0,0.01); line-height: 1.6; page-break-inside: avoid;">
+                        <strong>ملاحظات العقد الإضافية:</strong><br>
+                        ${userNotes}
+                    </div>
+                `;
+            }
+        }
         
         const { headerHtml, footerHtml } = compilePrintHeaderAndFooter(data.print_header_template, data.print_footer_template, data.company_info, 'contract');
         
@@ -1617,6 +1684,7 @@ async function printContractA4() {
                 <div class="print-body-content">
                     <h1 class="print-title">عقد اتفاق وتوريد نظام طاقة شمسية</h1>
                     <div class="print-text-block">${contractText}</div>
+                    ${notesHtml}
                 </div>
                 <div class="print-signatures">
                     <div class="print-signature-box">الطرف الأول (الشركة المجهزة)</div>
@@ -2074,8 +2142,16 @@ async function loadSettings() {
             document.getElementById('sett-company-name').value = configs.company_name || '';
             document.getElementById('sett-company-phone').value = configs.company_phone || '';
             document.getElementById('sett-company-address').value = configs.company_address || '';
-            document.getElementById('sett-contract-template').value = configs.contract_template || '';
-            document.getElementById('sett-warranty-template').value = configs.warranty_template || '';
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.value = val;
+            };
+            setVal('sett-contract-template-cash', configs.contract_template_cash || configs.contract_template || '');
+            setVal('sett-contract-template-installment', configs.contract_template_installment || configs.contract_template || '');
+            setVal('sett-warranty-template-cash', configs.warranty_template_cash || configs.warranty_template || '');
+            setVal('sett-warranty-template-installment', configs.warranty_template_installment || configs.warranty_template || '');
+            setVal('sett-receipt-template-cash', configs.receipt_template_cash || 'تم قبض مبلغ العمل بالكامل نقداً عند التوقيع/التشغيل. يعتبر هذا الوصل إقراراً رسمياً باستلام المبلغ أعلاه.');
+            setVal('sett-receipt-template-installment', configs.receipt_template_installment || 'تم قبض مبلغ الدفعة الأولى المقدمة المتفق عليها كدفعة تشغيل وتجهيز للمواد المذكورة في العقد الموقع بين الطرفين. يعتبر هذا الوصل إقراراً رسمياً باستلام المبلغ أعلاه.');
             document.getElementById('sett-admin-password').value = ''; // clear password view
             
             const settEngInput = document.getElementById('sett-engineer-name');
@@ -2140,16 +2216,24 @@ async function saveGeneralSettings() {
 }
 
 async function saveTemplatesSettings() {
-    const contract = document.getElementById('sett-contract-template').value;
-    const warranty = document.getElementById('sett-warranty-template').value;
+    const contractCash = document.getElementById('sett-contract-template-cash').value;
+    const contractInst = document.getElementById('sett-contract-template-installment').value;
+    const warrantyCash = document.getElementById('sett-warranty-template-cash').value;
+    const warrantyInst = document.getElementById('sett-warranty-template-installment').value;
+    const receiptCash = document.getElementById('sett-receipt-template-cash').value;
+    const receiptInst = document.getElementById('sett-receipt-template-installment').value;
     
     try {
         const res = await fetch('/api/settings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                contract_template: contract, 
-                warranty_template: warranty
+                contract_template_cash: contractCash,
+                contract_template_installment: contractInst,
+                warranty_template_cash: warrantyCash,
+                warranty_template_installment: warrantyInst,
+                receipt_template_cash: receiptCash,
+                receipt_template_installment: receiptInst
             })
         });
         const data = await res.json();
@@ -2157,7 +2241,9 @@ async function saveTemplatesSettings() {
             alert(data.message);
             loadSettings();
         }
-    } catch (e) {}
+    } catch (e) {
+        alert('حدث خطأ أثناء حفظ القوالب');
+    }
 }
 
 async function uploadPrintImage(type) {
@@ -2788,7 +2874,7 @@ async function printFirstReceiptA4() {
             <div class="print-sheet-a4">
                 ${headerHtml}
                 <div class="print-body-content">
-                    <h1 class="print-title">وصل قبض مالي (الدفعة المقدمة)</h1>
+                    <h1 class="print-title">${data.sale_type === 'Cash' ? 'وصل قبض مالي (نقدي)' : 'وصل قبض مالي (الدفعة المقدمة)'}</h1>
                     <table class="print-table" style="margin-top: 30px; margin-bottom: 30px;">
                         <tr>
                             <td style="width: 25%; background: #f2f2f2; font-weight:bold;">رقم المعاملة/العميل:</td>
@@ -2801,7 +2887,7 @@ async function printFirstReceiptA4() {
                             <td colspan="3" style="font-weight:bold; font-size: 1.1rem; color: #000;">${data.customer_name}</td>
                         </tr>
                         <tr>
-                            <td style="background: #f2f2f2; font-weight:bold;">مبلغ الدفعة المقبوضة:</td>
+                            <td style="background: #f2f2f2; font-weight:bold;">${data.sale_type === 'Cash' ? 'المبلغ الإجمالي المقبوض:' : 'مبلغ الدفعة المقبوضة:'}</td>
                             <td colspan="3" style="font-weight:bold; font-size: 1.2rem; color: green; background: rgba(16, 185, 129, 0.05);">${formatCurrency(data.financials.down_payment)}</td>
                         </tr>
                         <tr>
@@ -2819,7 +2905,7 @@ async function printFirstReceiptA4() {
                     </table>
                     <div style="font-size: 0.95rem; line-height: 1.8; margin-bottom: 50px; background: rgba(0,0,0,0.01); padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
                         <strong>تفاصيل وملاحظات الوصل:</strong><br>
-                        تم قبض مبلغ الدفعة الأولى المقدمة المتفق عليها كدفعة تشغيل وتجهيز للمواد المذكورة في العقد الموقع بين الطرفين. يعتبر هذا الوصل إقراراً رسمياً باستلام المبلغ أعلاه.
+                        ${data.compiled_receipt_note || 'تم استلام المبلغ المتفق عليه.'}
                     </div>
                 </div>
                 <div class="print-signatures" style="margin-top: 40px;">
