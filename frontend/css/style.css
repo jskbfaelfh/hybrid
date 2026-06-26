@@ -1282,3 +1282,38 @@ select.form-control option {
 .profile-tab-pane.active {
     display: block;
 }
+
+/* Mobile Performance & Light Theme Optimization */
+@media (max-width: 768px) {
+    :root, [data-theme="light"], [data-theme="dark"] {
+        --bg-main: #f8fafc;
+        --bg-card: #ffffff;
+        --bg-sidebar: #ffffff;
+        --border-card: #e2e8f0;
+        
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        
+        --bg-input: #f1f5f9;
+        --border-input: #cbd5e1;
+        --text-input: #0f172a;
+        --bg-select-option: #ffffff;
+    }
+    
+    /* Disable expensive blur filters to prevent scrolling lag */
+    .sidebar, 
+    .glass-card, 
+    .modal-content, 
+    .header-container, 
+    .profile-tabs, 
+    .list-categories-container {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+    
+    /* Optimize transition animations on mobile to reduce rendering delay */
+    * {
+        transition-duration: 0.15s !important;
+    }
+}
